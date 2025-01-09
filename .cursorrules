@@ -1,0 +1,7 @@
+Develop environment:
+
+- Windows 11: please run command step by step, do not use && in command.
+
+Rules:
+
+- Log all upgrade steps in develop_log.md
