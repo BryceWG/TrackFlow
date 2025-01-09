@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PlusIcon, CalendarIcon, FolderIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Modal } from './components/Modal'
 import { ProjectForm } from './components/ProjectForm'
 import { EntryForm } from './components/EntryForm'
 import { FilterBar } from './components/FilterBar'
+import { LoadingSpinner } from './components/LoadingSpinner'
+import { Toast, ToastType } from './components/Toast'
 import { useLocalStorage } from './hooks/useLocalStorage'
 
 interface Project {
@@ -35,37 +37,64 @@ function App() {
   const [projects, setProjects] = useLocalStorage<Project[]>('projects', []);
   const [entries, setEntries] = useLocalStorage<Entry[]>('entries', []);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [toast, setToast] = useState<{ type: ToastType; message: string; show: boolean }>({
+    type: 'info',
+    message: '',
+    show: false,
+  });
+
+  // 模拟加载效果
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const showToast = (type: ToastType, message: string) => {
+    setToast({ type, message, show: true });
+  };
 
   const handleCreateProject = (projectData: { name: string; description: string }) => {
-    const newProject = {
-      id: Date.now().toString(),
-      order: projects.length,
-      ...projectData,
-    };
-    setProjects([...projects, newProject]);
-    setIsProjectModalOpen(false);
+    try {
+      const newProject = {
+        id: Date.now().toString(),
+        order: projects.length,
+        ...projectData,
+      };
+      setProjects([...projects, newProject]);
+      setIsProjectModalOpen(false);
+      showToast('success', '项目创建成功');
+    } catch (error) {
+      showToast('error', '项目创建失败');
+    }
   };
 
   const handleCreateEntry = (entryData: { title: string; content: string; projectId: string }) => {
-    if (editingEntry) {
-      // 编辑模式
-      const updatedEntries = entries.map(entry => 
-        entry.id === editingEntry.id 
-          ? { ...entry, ...entryData }
-          : entry
-      );
-      setEntries(updatedEntries);
-      setEditingEntry(null);
-    } else {
-      // 创建模式
-      const newEntry = {
-        id: Date.now().toString(),
-        ...entryData,
-        timestamp: new Date().toISOString(),
-      };
-      setEntries([newEntry, ...entries]);
+    try {
+      if (editingEntry) {
+        const updatedEntries = entries.map(entry => 
+          entry.id === editingEntry.id 
+            ? { ...entry, ...entryData }
+            : entry
+        );
+        setEntries(updatedEntries);
+        setEditingEntry(null);
+        showToast('success', '记录更新成功');
+      } else {
+        const newEntry = {
+          id: Date.now().toString(),
+          ...entryData,
+          timestamp: new Date().toISOString(),
+        };
+        setEntries([newEntry, ...entries]);
+        showToast('success', '记录创建成功');
+      }
+      setIsEntryModalOpen(false);
+    } catch (error) {
+      showToast('error', editingEntry ? '记录更新失败' : '记录创建失败');
     }
-    setIsEntryModalOpen(false);
   };
 
   const handleEditEntry = (entry: Entry) => {
@@ -75,16 +104,25 @@ function App() {
 
   const handleDeleteEntry = (entryId: string) => {
     if (!window.confirm('确定要删除这条记录吗？')) return;
-    setEntries(entries.filter(entry => entry.id !== entryId));
+    try {
+      setEntries(entries.filter(entry => entry.id !== entryId));
+      showToast('success', '记录删除成功');
+    } catch (error) {
+      showToast('error', '记录删除失败');
+    }
   };
 
   const handleDeleteProject = (projectId: string) => {
     if (!window.confirm('确定要删除这个项目吗？相关的记录也会被删除。')) return;
-    
-    setProjects(projects.filter(p => p.id !== projectId));
-    setEntries(entries.filter(e => e.projectId !== projectId));
-    if (selectedProjectId === projectId) {
-      setSelectedProjectId(null);
+    try {
+      setProjects(projects.filter(p => p.id !== projectId));
+      setEntries(entries.filter(e => e.projectId !== projectId));
+      if (selectedProjectId === projectId) {
+        setSelectedProjectId(null);
+      }
+      showToast('success', '项目删除成功');
+    } catch (error) {
+      showToast('error', '项目删除失败');
     }
   };
 
@@ -134,6 +172,14 @@ function App() {
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const sortedProjects = [...projects].sort((a, b) => a.order - b.order);
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -334,6 +380,14 @@ function App() {
           } : undefined}
         />
       </Modal>
+
+      {/* Toast 通知 */}
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        show={toast.show}
+        onClose={() => setToast(prev => ({ ...prev, show: false }))}
+      />
     </div>
   )
 }
