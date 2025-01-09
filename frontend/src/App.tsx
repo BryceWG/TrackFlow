@@ -282,7 +282,7 @@ function App() {
           {/* 标题和按钮区域 */}
           <div className="p-4">
             {/* 在移动端添加顶部空间，为菜单按钮留位置 */}
-            <div className="h-8 lg:h-0" />
+            <div className="h-14 lg:h-0" />
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-800">项目列表</h2>
               <button 
