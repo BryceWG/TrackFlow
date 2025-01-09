@@ -23,6 +23,7 @@ interface Project {
   description: string;
   order: number;
   color: string;
+  emoji: string;
 }
 
 interface Entry {
@@ -43,7 +44,8 @@ const DEFAULT_COLOR = {
   bg: 'bg-blue-50',
   hover: 'hover:bg-blue-100',
   tag: 'bg-blue-100',
-  icon: 'text-blue-600'
+  icon: 'text-blue-600',
+  border: 'border-blue-200'
 };
 
 function App() {
@@ -99,7 +101,7 @@ function App() {
     setToast({ type, message, show: true });
   };
 
-  const handleCreateProject = (projectData: { name: string; description: string; color: string }) => {
+  const handleCreateProject = (projectData: { name: string; description: string; color: string; emoji: string }) => {
     try {
       const newProject = {
         id: Date.now().toString(),
@@ -335,16 +337,18 @@ function App() {
                     key={project.id}
                     className={`flex items-center justify-between p-2 rounded cursor-pointer group transition-colors duration-150
                       ${colorObj.bg} ${colorObj.hover}
-                      ${selectedProjectId === project.id ? '!bg-blue-100 hover:!bg-blue-100' : ''}
+                      ${selectedProjectId === project.id ? `border-2 ${colorObj.border}` : 'border-2 border-transparent'}
                     `}
                     onClick={() => handleProjectSelect(project.id)}
                     title={project.description}
                   >
                     <div className="flex items-center space-x-2">
-                      <FolderIcon className={`w-5 h-5 ${
-                        selectedProjectId === project.id ? 'text-blue-600' : colorObj.icon
-                      }`} />
-                      <span className={selectedProjectId === project.id ? 'text-blue-600' : ''}>
+                      <span className={`text-lg ${
+                        selectedProjectId === project.id ? colorObj.icon : ''
+                      }`}>
+                        {project.emoji}
+                      </span>
+                      <span className={selectedProjectId === project.id ? colorObj.icon : ''}>
                         {project.name}
                       </span>
                     </div>
@@ -446,13 +450,14 @@ function App() {
                   }}
                 >
                   <div className="flex-shrink-0 flex flex-col items-center mr-2 sm:mr-4">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full ${colorObj?.tag || 'bg-blue-100'}`}>
-                      <CalendarIcon className={`w-4 h-4 sm:w-6 sm:h-6 ${colorObj?.icon || 'text-blue-600'}`} />
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-lg sm:text-xl ${colorObj?.tag || 'bg-blue-100'}`}>
+                      {project?.emoji || '📝'}
                     </div>
                     <div className="h-full w-0.5 bg-gray-200"></div>
                   </div>
-                  <div className={`flex-1 rounded-lg shadow p-3 sm:p-4 group-hover:ring-1 group-hover:ring-blue-200 cursor-pointer transition-colors duration-150
+                  <div className={`flex-1 rounded-lg shadow p-3 sm:p-4 group-hover:ring-1 group-hover:ring-blue-200 cursor-pointer transition-colors duration-150 border-2
                     ${colorObj?.bg || 'bg-white'}
+                    ${colorObj?.border || 'border-blue-200'}
                   `}>
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
                       <div>
