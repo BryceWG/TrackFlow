@@ -56,17 +56,26 @@ export function FilterBar({ onDateRangeChange }: FilterBarProps) {
   };
 
   return (
-    <div className="mb-6">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-      >
-        <FunnelIcon className="w-4 h-4 mr-1" />
-        筛选
-      </button>
+    <div className="relative">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+        >
+          <FunnelIcon className="w-4 h-4 mr-1" />
+          筛选
+        </button>
+        {(startDate || endDate) && (
+          <span className="text-xs text-gray-500">
+            {startDate ? new Date(startDate).toLocaleDateString() : ''}
+            {startDate && endDate && ' 至 '}
+            {endDate ? new Date(endDate).toLocaleDateString() : ''}
+          </span>
+        )}
+      </div>
 
       {isOpen && (
-        <div className="mt-2 p-4 bg-white rounded-lg shadow">
+        <div className="absolute left-0 right-0 sm:right-auto mt-2 p-4 bg-white rounded-lg shadow-lg z-20 sm:min-w-[320px]">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-gray-900">时间范围</h3>
             {(startDate || endDate) && (
@@ -81,12 +90,12 @@ export function FilterBar({ onDateRangeChange }: FilterBarProps) {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => handleDateChange(e.target.value, endDate)}
-                className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className="w-full sm:w-auto block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
               <span className="text-gray-500">至</span>
               <input
@@ -94,7 +103,7 @@ export function FilterBar({ onDateRangeChange }: FilterBarProps) {
                 value={endDate}
                 min={startDate}
                 onChange={(e) => handleDateChange(startDate, e.target.value)}
-                className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className="w-full sm:w-auto block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
 
@@ -110,6 +119,12 @@ export function FilterBar({ onDateRangeChange }: FilterBarProps) {
               ))}
             </div>
           </div>
+
+          {/* 移动端遮罩 */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-25 -z-10 sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
         </div>
       )}
     </div>

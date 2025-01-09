@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
-import { PlusIcon, CalendarIcon, FolderIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { 
+  PlusIcon, 
+  CalendarIcon, 
+  FolderIcon, 
+  TrashIcon, 
+  PencilIcon,
+  Bars3Icon,
+  XMarkIcon as MenuCloseIcon
+} from '@heroicons/react/24/outline'
 import { Modal } from './components/Modal'
 import { ProjectForm } from './components/ProjectForm'
 import { EntryForm } from './components/EntryForm'
@@ -56,6 +64,7 @@ function App() {
     message: '',
     onConfirm: () => {},
   });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // 模拟加载效果
   useEffect(() => {
@@ -229,6 +238,15 @@ function App() {
     setIsEntryModalOpen(true);
   };
 
+  const handleCloseMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleProjectSelect = (projectId: string) => {
+    setSelectedProjectId(projectId === selectedProjectId ? null : projectId);
+    handleCloseMobileMenu();
+  };
+
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -239,124 +257,167 @@ function App() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* 侧边栏 */}
-      <aside className={`w-64 bg-white shadow-lg ${sidebarOpen ? '' : 'hidden'}`}>
-        <div className="p-4">
-          <h2 className="text-xl font-semibold text-gray-800">项目列表</h2>
-          <button 
-            className="mt-4 flex items-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-            onClick={() => {
-              setEditingEntry(null);
-              setIsProjectModalOpen(true);
-            }}
-          >
-            <PlusIcon className="w-5 h-5 mr-2" />
-            新建项目
-          </button>
-        </div>
-        <nav className="mt-4">
-          <div className="px-4 py-2 text-sm font-medium text-gray-600">
-            {sortedProjects.map((project, index) => (
-              <div 
-                key={project.id}
-                className={`flex items-center justify-between p-2 rounded cursor-pointer group hover:bg-gray-100 ${
-                  selectedProjectId === project.id ? 'bg-blue-50' : ''
-                }`}
-                onClick={() => setSelectedProjectId(project.id === selectedProjectId ? null : project.id)}
-                title={project.description}
+      {/* 移动端菜单按钮 */}
+      <button
+        type="button"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        {isMobileMenuOpen ? (
+          <MenuCloseIcon className="h-6 w-6" />
+        ) : (
+          <Bars3Icon className="h-6 w-6" />
+        )}
+      </button>
+
+      {/* 侧边栏 - 在移动端变为抽屉式菜单 */}
+      <aside 
+        className={`
+          fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+          lg:relative lg:translate-x-0
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        <div className="h-full flex flex-col">
+          {/* 标题和按钮区域 */}
+          <div className="p-4">
+            {/* 在移动端添加顶部空间，为菜单按钮留位置 */}
+            <div className="h-8 lg:h-0" />
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-800">项目列表</h2>
+              <button 
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                onClick={() => {
+                  setEditingEntry(null);
+                  setIsProjectModalOpen(true);
+                  handleCloseMobileMenu();
+                }}
               >
-                <div className="flex items-center space-x-2">
-                  <FolderIcon className={`w-5 h-5 ${
-                    selectedProjectId === project.id ? 'text-blue-600' : ''
-                  }`} />
-                  <span className={selectedProjectId === project.id ? 'text-blue-600' : ''}>
-                    {project.name}
-                  </span>
-                </div>
-                <div className="hidden group-hover:flex items-center space-x-1">
-                  {index > 0 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveProject(project.id, 'up');
-                      }}
-                      className="p-1 hover:bg-gray-200 rounded"
-                    >
-                      ↑
-                    </button>
-                  )}
-                  {index < projects.length - 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveProject(project.id, 'down');
-                      }}
-                      className="p-1 hover:bg-gray-200 rounded"
-                    >
-                      ↓
-                    </button>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteProject(project.id);
-                    }}
-                    className="p-1 hover:bg-gray-200 rounded text-red-600"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {projects.length === 0 && (
-              <div className="text-center text-gray-500 py-4">
-                暂无项目，点击上方按钮创建
-              </div>
-            )}
+                <PlusIcon className="w-5 h-5 mr-1" />
+                新建
+              </button>
+            </div>
           </div>
-        </nav>
+
+          {/* 项目列表 */}
+          <nav className="flex-1 overflow-y-auto">
+            <div className="px-4 py-2 text-sm font-medium text-gray-600">
+              {sortedProjects.map((project, index) => (
+                <div 
+                  key={project.id}
+                  className={`flex items-center justify-between p-2 rounded cursor-pointer group hover:bg-gray-100 ${
+                    selectedProjectId === project.id ? 'bg-blue-50' : ''
+                  }`}
+                  onClick={() => handleProjectSelect(project.id)}
+                  title={project.description}
+                >
+                  <div className="flex items-center space-x-2">
+                    <FolderIcon className={`w-5 h-5 ${
+                      selectedProjectId === project.id ? 'text-blue-600' : ''
+                    }`} />
+                    <span className={selectedProjectId === project.id ? 'text-blue-600' : ''}>
+                      {project.name}
+                    </span>
+                  </div>
+                  <div className="hidden group-hover:flex items-center space-x-1">
+                    {index > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMoveProject(project.id, 'up');
+                        }}
+                        className="p-1 hover:bg-gray-200 rounded"
+                      >
+                        ↑
+                      </button>
+                    )}
+                    {index < projects.length - 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMoveProject(project.id, 'down');
+                        }}
+                        className="p-1 hover:bg-gray-200 rounded"
+                      >
+                        ↓
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteProject(project.id);
+                      }}
+                      className="p-1 hover:bg-gray-200 rounded text-red-600"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {projects.length === 0 && (
+                <div className="text-center text-gray-500 py-4">
+                  暂无项目，点击上方按钮创建
+                </div>
+              )}
+            </div>
+          </nav>
+        </div>
       </aside>
 
+      {/* 移动端菜单遮罩 */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={handleCloseMobileMenu}
+        />
+      )}
+
       {/* 主内容区 */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-800">
+      <main className="flex-1 overflow-auto w-full">
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+            <div className="w-full sm:w-auto pl-12 lg:pl-0">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2 sm:mb-0">
                 {selectedProjectId ? `${getProjectName(selectedProjectId)}的时间轴` : '所有记录'}
               </h1>
               <FilterBar onDateRangeChange={setDateRange} />
-            </div>
+      </div>
             <button 
-              className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleOpenEntryModal}
+              className="w-full sm:w-auto flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => {
+                handleOpenEntryModal();
+                handleCloseMobileMenu();
+              }}
               disabled={projects.length === 0}
               title={projects.length === 0 ? "请先创建项目" : ""}
             >
               <PlusIcon className="w-5 h-5 mr-2" />
               新建记录
-            </button>
+        </button>
           </div>
 
           {/* 时间轴 */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {filteredEntries.map(entry => (
               <div 
                 key={entry.id} 
                 className="flex group"
-                onDoubleClick={() => handleEditEntry(entry)}
+                onDoubleClick={() => {
+                  handleEditEntry(entry);
+                  handleCloseMobileMenu();
+                }}
               >
-                <div className="flex flex-col items-center mr-4">
-                  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-100">
-                    <CalendarIcon className="w-6 h-6 text-blue-600" />
+                <div className="flex-shrink-0 flex flex-col items-center mr-2 sm:mr-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-blue-100">
+                    <CalendarIcon className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" />
                   </div>
                   <div className="h-full w-0.5 bg-gray-200"></div>
                 </div>
-                <div className="flex-1 bg-white rounded-lg shadow p-4 group-hover:ring-1 group-hover:ring-blue-200 cursor-pointer">
-                  <div className="flex justify-between items-start">
+                <div className="flex-1 bg-white rounded-lg shadow p-3 sm:p-4 group-hover:ring-1 group-hover:ring-blue-200 cursor-pointer">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900">{entry.title}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="text-base sm:text-lg font-medium text-gray-900">{entry.title}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500">
                         {new Date(entry.timestamp).toLocaleString('zh-CN', {
                           year: 'numeric',
                           month: '2-digit',
@@ -364,22 +425,28 @@ function App() {
                           hour: '2-digit',
                           minute: '2-digit'
                         })}
-                      </p>
-                    </div>
+        </p>
+      </div>
                     <div className="flex items-center space-x-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {getProjectName(entry.projectId)}
                       </span>
-                      <div className="hidden group-hover:flex items-center space-x-1">
+                      <div className="flex sm:hidden group-hover:flex items-center space-x-1">
                         <button
-                          onClick={() => handleEditEntry(entry)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditEntry(entry);
+                          }}
                           className="p-1 hover:bg-gray-100 rounded text-gray-600"
                           title="编辑"
                         >
                           <PencilIcon className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteEntry(entry.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEntry(entry.id);
+                          }}
                           className="p-1 hover:bg-gray-100 rounded text-red-600"
                           title="删除"
                         >
@@ -388,12 +455,12 @@ function App() {
                       </div>
                     </div>
                   </div>
-                  <p className="mt-2 text-gray-600">{entry.content}</p>
+                  <p className="mt-2 text-sm sm:text-base text-gray-600">{entry.content}</p>
                 </div>
               </div>
             ))}
             {filteredEntries.length === 0 && (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-gray-500 py-6 sm:py-8">
                 {selectedProjectId ? '该项目暂无记录' : '暂无记录'}，点击右上角按钮创建
               </div>
             )}
