@@ -22,6 +22,7 @@ interface Project {
   name: string;
   description: string;
   order: number;
+  color: string;
 }
 
 interface Entry {
@@ -36,6 +37,14 @@ interface DateRange {
   start: string | null;
   end: string | null;
 }
+
+// 默认颜色对象
+const DEFAULT_COLOR = {
+  bg: 'bg-blue-50',
+  hover: 'hover:bg-blue-100',
+  tag: 'bg-blue-100',
+  icon: 'text-blue-600'
+};
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -74,11 +83,23 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // 数据迁移：为旧数据添加颜色属性
+  useEffect(() => {
+    const needsMigration = projects.some(project => !project.color);
+    if (needsMigration) {
+      const migratedProjects = projects.map((project, index) => ({
+        ...project,
+        color: project.color || JSON.stringify(DEFAULT_COLOR)
+      }));
+      setProjects(migratedProjects);
+    }
+  }, []);
+
   const showToast = (type: ToastType, message: string) => {
     setToast({ type, message, show: true });
   };
 
-  const handleCreateProject = (projectData: { name: string; description: string }) => {
+  const handleCreateProject = (projectData: { name: string; description: string; color: string }) => {
     try {
       const newProject = {
         id: Date.now().toString(),
@@ -302,58 +323,67 @@ function App() {
           {/* 项目列表 */}
           <nav className="flex-1 overflow-y-auto">
             <div className="px-4 py-2 text-sm font-medium text-gray-600">
-              {sortedProjects.map((project, index) => (
-                <div 
-                  key={project.id}
-                  className={`flex items-center justify-between p-2 rounded cursor-pointer group hover:bg-gray-100 ${
-                    selectedProjectId === project.id ? 'bg-blue-50' : ''
-                  }`}
-                  onClick={() => handleProjectSelect(project.id)}
-                  title={project.description}
-                >
-                  <div className="flex items-center space-x-2">
-                    <FolderIcon className={`w-5 h-5 ${
-                      selectedProjectId === project.id ? 'text-blue-600' : ''
-                    }`} />
-                    <span className={selectedProjectId === project.id ? 'text-blue-600' : ''}>
-                      {project.name}
-                    </span>
-                  </div>
-                  <div className="hidden group-hover:flex items-center space-x-1">
-                    {index > 0 && (
+              {sortedProjects.map((project, index) => {
+                let colorObj;
+                try {
+                  colorObj = JSON.parse(project.color);
+                } catch {
+                  colorObj = DEFAULT_COLOR;
+                }
+                return (
+                  <div 
+                    key={project.id}
+                    className={`flex items-center justify-between p-2 rounded cursor-pointer group transition-colors duration-150
+                      ${colorObj.bg} ${colorObj.hover}
+                      ${selectedProjectId === project.id ? '!bg-blue-100 hover:!bg-blue-100' : ''}
+                    `}
+                    onClick={() => handleProjectSelect(project.id)}
+                    title={project.description}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <FolderIcon className={`w-5 h-5 ${
+                        selectedProjectId === project.id ? 'text-blue-600' : colorObj.icon
+                      }`} />
+                      <span className={selectedProjectId === project.id ? 'text-blue-600' : ''}>
+                        {project.name}
+                      </span>
+                    </div>
+                    <div className="hidden group-hover:flex items-center space-x-1">
+                      {index > 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveProject(project.id, 'up');
+                          }}
+                          className="p-1 hover:bg-gray-200 rounded"
+                        >
+                          ↑
+                        </button>
+                      )}
+                      {index < projects.length - 1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveProject(project.id, 'down');
+                          }}
+                          className="p-1 hover:bg-gray-200 rounded"
+                        >
+                          ↓
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleMoveProject(project.id, 'up');
+                          handleDeleteProject(project.id);
                         }}
-                        className="p-1 hover:bg-gray-200 rounded"
+                        className="p-1 hover:bg-gray-200 rounded text-red-600"
                       >
-                        ↑
+                        <TrashIcon className="w-4 h-4" />
                       </button>
-                    )}
-                    {index < projects.length - 1 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveProject(project.id, 'down');
-                        }}
-                        className="p-1 hover:bg-gray-200 rounded"
-                      >
-                        ↓
-                      </button>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteProject(project.id);
-                      }}
-                      className="p-1 hover:bg-gray-200 rounded text-red-600"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {projects.length === 0 && (
                 <div className="text-center text-gray-500 py-4">
                   暂无项目，点击上方按钮创建
@@ -398,67 +428,78 @@ function App() {
 
           {/* 时间轴 */}
           <div className="space-y-4 sm:space-y-6">
-            {filteredEntries.map(entry => (
-              <div 
-                key={entry.id} 
-                className="flex group"
-                onDoubleClick={() => {
-                  handleEditEntry(entry);
-                  handleCloseMobileMenu();
-                }}
-              >
-                <div className="flex-shrink-0 flex flex-col items-center mr-2 sm:mr-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-blue-100">
-                    <CalendarIcon className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" />
+            {filteredEntries.map(entry => {
+              const project = projects.find(p => p.id === entry.projectId);
+              let colorObj;
+              try {
+                colorObj = project ? JSON.parse(project.color) : null;
+              } catch {
+                colorObj = project ? DEFAULT_COLOR : null;
+              }
+              return (
+                <div 
+                  key={entry.id} 
+                  className="flex group"
+                  onDoubleClick={() => {
+                    handleEditEntry(entry);
+                    handleCloseMobileMenu();
+                  }}
+                >
+                  <div className="flex-shrink-0 flex flex-col items-center mr-2 sm:mr-4">
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full ${colorObj?.tag || 'bg-blue-100'}`}>
+                      <CalendarIcon className={`w-4 h-4 sm:w-6 sm:h-6 ${colorObj?.icon || 'text-blue-600'}`} />
+                    </div>
+                    <div className="h-full w-0.5 bg-gray-200"></div>
                   </div>
-                  <div className="h-full w-0.5 bg-gray-200"></div>
-                </div>
-                <div className="flex-1 bg-white rounded-lg shadow p-3 sm:p-4 group-hover:ring-1 group-hover:ring-blue-200 cursor-pointer">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
-                    <div>
-                      <h3 className="text-base sm:text-lg font-medium text-gray-900">{entry.title}</h3>
-                      <p className="text-xs sm:text-sm text-gray-500">
-                        {new Date(entry.timestamp).toLocaleString('zh-CN', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                  <div className={`flex-1 rounded-lg shadow p-3 sm:p-4 group-hover:ring-1 group-hover:ring-blue-200 cursor-pointer transition-colors duration-150
+                    ${colorObj?.bg || 'bg-white'}
+                  `}>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900">{entry.title}</h3>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {new Date(entry.timestamp).toLocaleString('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
         </p>
       </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {getProjectName(entry.projectId)}
-                      </span>
-                      <div className="flex sm:hidden group-hover:flex items-center space-x-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditEntry(entry);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded text-gray-600"
-                          title="编辑"
-                        >
-                          <PencilIcon className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteEntry(entry.id);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded text-red-600"
-                          title="删除"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
+                      <div className="flex items-center space-x-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorObj?.tag || 'bg-blue-100'} ${colorObj?.icon || 'text-blue-600'}`}>
+                          {getProjectName(entry.projectId)}
+                        </span>
+                        <div className="flex sm:hidden group-hover:flex items-center space-x-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditEntry(entry);
+                            }}
+                            className="p-1 hover:bg-gray-100 rounded text-gray-600"
+                            title="编辑"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteEntry(entry.id);
+                            }}
+                            className="p-1 hover:bg-gray-100 rounded text-red-600"
+                            title="删除"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
+                    <p className="mt-2 text-sm sm:text-base text-gray-600">{entry.content}</p>
                   </div>
-                  <p className="mt-2 text-sm sm:text-base text-gray-600">{entry.content}</p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {filteredEntries.length === 0 && (
               <div className="text-center text-gray-500 py-6 sm:py-8">
                 {selectedProjectId ? '该项目暂无记录' : '暂无记录'}，点击右上角按钮创建
