@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Project {
   id: string;
@@ -10,20 +10,37 @@ interface EntryFormProps {
   projects: Project[];
   onSubmit: (entry: { title: string; content: string; projectId: string }) => void;
   onCancel: () => void;
+  initialData?: {
+    title: string;
+    content: string;
+    projectId: string;
+  };
+  mode?: 'create' | 'edit';
 }
 
-export function EntryForm({ projects, onSubmit, onCancel }: EntryFormProps) {
+export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'create' }: EntryFormProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [projectId, setProjectId] = useState('');
+
+  // 如果是编辑模式，加载初始数据
+  useEffect(() => {
+    if (mode === 'edit' && initialData) {
+      setTitle(initialData.title);
+      setContent(initialData.content);
+      setProjectId(initialData.projectId);
+    }
+  }, [mode, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !projectId) return;
     onSubmit({ title, content, projectId });
-    setTitle('');
-    setContent('');
-    setProjectId('');
+    if (mode === 'create') {
+      setTitle('');
+      setContent('');
+      setProjectId('');
+    }
   };
 
   return (
@@ -90,7 +107,7 @@ export function EntryForm({ projects, onSubmit, onCancel }: EntryFormProps) {
           type="submit"
           className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
         >
-          创建
+          {mode === 'create' ? '创建' : '保存'}
         </button>
       </div>
     </form>
