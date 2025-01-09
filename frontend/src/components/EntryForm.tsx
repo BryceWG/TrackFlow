@@ -22,20 +22,39 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [projectId, setProjectId] = useState('');
+  const [error, setError] = useState('');
 
-  // 如果是编辑模式，加载初始数据
   useEffect(() => {
     if (mode === 'edit' && initialData) {
       setTitle(initialData.title);
       setContent(initialData.content);
+      setProjectId(initialData.projectId);
+    } else if (initialData?.projectId) {
       setProjectId(initialData.projectId);
     }
   }, [mode, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !projectId) return;
-    onSubmit({ title, content, projectId });
+    setError('');
+
+    // 检查是否至少填写了标题或内容之一
+    if (!title.trim() && !content.trim()) {
+      setError('请至少填写标题或内容其中之一');
+      return;
+    }
+
+    if (!projectId) {
+      setError('请选择所属项目');
+      return;
+    }
+
+    onSubmit({ 
+      title: title.trim(), 
+      content: content.trim(), 
+      projectId 
+    });
+
     if (mode === 'create') {
       setTitle('');
       setContent('');
@@ -56,13 +75,12 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
           onChange={(e) => setTitle(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           placeholder="请输入记录标题"
-          required
         />
       </div>
 
       <div>
         <label htmlFor="project" className="block text-sm font-medium text-gray-700">
-          所属项目
+          所属项目 <span className="text-red-500">*</span>
         </label>
         <select
           id="project"
@@ -91,8 +109,17 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
           rows={4}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           placeholder="请输入记录内容"
-          required
         />
+      </div>
+
+      {error && (
+        <div className="text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      <div className="mt-2 text-sm text-gray-500">
+        注：标题和内容至少填写一项
       </div>
 
       <div className="flex justify-end space-x-3">

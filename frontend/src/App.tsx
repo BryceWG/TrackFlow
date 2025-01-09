@@ -6,6 +6,7 @@ import { EntryForm } from './components/EntryForm'
 import { FilterBar } from './components/FilterBar'
 import { LoadingSpinner } from './components/LoadingSpinner'
 import { Toast, ToastType } from './components/Toast'
+import { ConfirmDialog } from './components/ConfirmDialog'
 import { useLocalStorage } from './hooks/useLocalStorage'
 
 interface Project {
@@ -42,6 +43,18 @@ function App() {
     type: 'info',
     message: '',
     show: false,
+  });
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
   });
 
   // 模拟加载效果
@@ -103,27 +116,41 @@ function App() {
   };
 
   const handleDeleteEntry = (entryId: string) => {
-    if (!window.confirm('确定要删除这条记录吗？')) return;
-    try {
-      setEntries(entries.filter(entry => entry.id !== entryId));
-      showToast('success', '记录删除成功');
-    } catch (error) {
-      showToast('error', '记录删除失败');
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: '删除记录',
+      message: '确定要删除这条记录吗？此操作无法撤销。',
+      type: 'danger',
+      onConfirm: () => {
+        try {
+          setEntries(entries.filter(entry => entry.id !== entryId));
+          showToast('success', '记录删除成功');
+        } catch (error) {
+          showToast('error', '记录删除失败');
+        }
+      },
+    });
   };
 
   const handleDeleteProject = (projectId: string) => {
-    if (!window.confirm('确定要删除这个项目吗？相关的记录也会被删除。')) return;
-    try {
-      setProjects(projects.filter(p => p.id !== projectId));
-      setEntries(entries.filter(e => e.projectId !== projectId));
-      if (selectedProjectId === projectId) {
-        setSelectedProjectId(null);
-      }
-      showToast('success', '项目删除成功');
-    } catch (error) {
-      showToast('error', '项目删除失败');
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: '删除项目',
+      message: '确定要删除这个项目吗？相关的记录也会被删除，此操作无法撤销。',
+      type: 'danger',
+      onConfirm: () => {
+        try {
+          setProjects(projects.filter(p => p.id !== projectId));
+          setEntries(entries.filter(e => e.projectId !== projectId));
+          if (selectedProjectId === projectId) {
+            setSelectedProjectId(null);
+          }
+          showToast('success', '项目删除成功');
+        } catch (error) {
+          showToast('error', '项目删除失败');
+        }
+      },
+    });
   };
 
   const handleMoveProject = (projectId: string, direction: 'up' | 'down') => {
@@ -172,6 +199,35 @@ function App() {
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const sortedProjects = [...projects].sort((a, b) => a.order - b.order);
+
+  // 获取记录数量最多的项目ID
+  const getMostUsedProjectId = () => {
+    if (selectedProjectId) return selectedProjectId;
+
+    const projectCounts = entries.reduce((acc, entry) => {
+      acc[entry.projectId] = (acc[entry.projectId] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // 过滤掉已删除的项目
+    const validProjectIds = projects.map(p => p.id);
+    let maxCount = 0;
+    let mostUsedProjectId = projects[0]?.id || '';
+
+    Object.entries(projectCounts).forEach(([projectId, count]) => {
+      if (count > maxCount && validProjectIds.includes(projectId)) {
+        maxCount = count;
+        mostUsedProjectId = projectId;
+      }
+    });
+
+    return mostUsedProjectId;
+  };
+
+  const handleOpenEntryModal = () => {
+    setEditingEntry(null);
+    setIsEntryModalOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -273,10 +329,7 @@ function App() {
             </div>
             <button 
               className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => {
-                setEditingEntry(null);
-                setIsEntryModalOpen(true);
-              }}
+              onClick={handleOpenEntryModal}
               disabled={projects.length === 0}
               title={projects.length === 0 ? "请先创建项目" : ""}
             >
@@ -288,14 +341,18 @@ function App() {
           {/* 时间轴 */}
           <div className="space-y-6">
             {filteredEntries.map(entry => (
-              <div key={entry.id} className="flex group">
+              <div 
+                key={entry.id} 
+                className="flex group"
+                onDoubleClick={() => handleEditEntry(entry)}
+              >
                 <div className="flex flex-col items-center mr-4">
                   <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-100">
                     <CalendarIcon className="w-6 h-6 text-blue-600" />
                   </div>
                   <div className="h-full w-0.5 bg-gray-200"></div>
                 </div>
-                <div className="flex-1 bg-white rounded-lg shadow p-4 group-hover:ring-1 group-hover:ring-blue-200">
+                <div className="flex-1 bg-white rounded-lg shadow p-4 group-hover:ring-1 group-hover:ring-blue-200 cursor-pointer">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">{entry.title}</h3>
@@ -377,9 +434,23 @@ function App() {
             title: editingEntry.title,
             content: editingEntry.content,
             projectId: editingEntry.projectId,
-          } : undefined}
+          } : {
+            title: '',
+            content: '',
+            projectId: selectedProjectId || getMostUsedProjectId(),
+          }}
         />
       </Modal>
+
+      {/* 确认对话框 */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+      />
 
       {/* Toast 通知 */}
       <Toast
