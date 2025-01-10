@@ -16,6 +16,8 @@ import { LoadingSpinner } from './components/LoadingSpinner'
 import { Toast, ToastType } from './components/Toast'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { AIConfig } from './components/AIConfig'
+import { AIAnalysis } from './components/AIAnalysis'
 
 interface Project {
   id: string;
@@ -37,6 +39,14 @@ interface Entry {
 interface DateRange {
   start: string | null;
   end: string | null;
+}
+
+interface AIConfigData {
+  apiKey: string;
+  apiUrl: string;
+  model: string;
+  temperature: number;
+  systemPrompt: string;
 }
 
 // 默认颜色对象
@@ -76,6 +86,15 @@ function App() {
     onConfirm: () => {},
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [aiConfig, setAIConfig] = useLocalStorage<AIConfigData>('aiConfig', {
+    apiKey: '',
+    apiUrl: 'https://api.openai.com/v1/chat/completions',
+    model: 'gpt-3.5-turbo',
+    temperature: 0.7,
+    systemPrompt: '',
+  });
+  const [isAIConfigOpen, setIsAIConfigOpen] = useState(false);
+  const [isAIAnalysisOpen, setIsAIAnalysisOpen] = useState(false);
 
   // 模拟加载效果
   useEffect(() => {
@@ -84,6 +103,22 @@ function App() {
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  // 添加快捷键监听
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 检查是否按下 Ctrl+N 或 Command+N
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault(); // 阻止默认行为
+        if (projects.length > 0) {
+          handleOpenEntryModal();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [projects.length]);
 
   // 数据迁移：为旧数据添加颜色属性
   useEffect(() => {
@@ -419,20 +454,39 @@ function App() {
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2 sm:mb-0">
                 {selectedProjectId ? `${getProjectName(selectedProjectId)}的时间轴` : '所有记录'}
               </h1>
-              <FilterBar onDateRangeChange={setDateRange} />
-      </div>
-            <button 
-              className="w-full sm:w-auto flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => {
-                handleOpenEntryModal();
-                handleCloseMobileMenu();
-              }}
-              disabled={projects.length === 0}
-              title={projects.length === 0 ? "请先创建项目" : ""}
-            >
-              <PlusIcon className="w-5 h-5 mr-2" />
-              新建记录
-        </button>
+              <div className="flex items-center gap-4">
+                <FilterBar onDateRangeChange={setDateRange} />
+                {selectedProjectId && (
+                  <button
+                    onClick={() => setIsAIAnalysisOpen(true)}
+                    className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
+                  >
+                    <span className="mr-1">AI 分析</span>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsAIConfigOpen(true)}
+                className="text-sm text-gray-600 hover:text-gray-900"
+                title="配置 AI 服务"
+              >
+                AI 设置
+              </button>
+              <button 
+                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => {
+                  handleOpenEntryModal();
+                  handleCloseMobileMenu();
+                }}
+                disabled={projects.length === 0}
+                title={projects.length === 0 ? "请先创建项目" : "快捷键：Ctrl/Command + N"}
+              >
+                <PlusIcon className="w-5 h-5 mr-2" />
+                新建记录
+              </button>
+            </div>
           </div>
 
           {/* 时间轴 */}
@@ -578,6 +632,40 @@ function App() {
         show={toast.show}
         onClose={() => setToast(prev => ({ ...prev, show: false }))}
       />
+
+      {/* AI 配置弹窗 */}
+      <Modal
+        isOpen={isAIConfigOpen}
+        onClose={() => setIsAIConfigOpen(false)}
+        title="AI 服务配置"
+      >
+        <AIConfig
+          config={aiConfig}
+          onSave={(newConfig) => {
+            setAIConfig(newConfig);
+            setIsAIConfigOpen(false);
+            showToast('success', 'AI 配置已保存');
+          }}
+          onClose={() => setIsAIConfigOpen(false)}
+        />
+      </Modal>
+
+      {/* AI 分析弹窗 */}
+      <Modal
+        isOpen={isAIAnalysisOpen}
+        onClose={() => setIsAIAnalysisOpen(false)}
+        title="AI 分析"
+      >
+        <AIAnalysis
+          entries={filteredEntries}
+          projectName={getProjectName(selectedProjectId || '')}
+          dateRange={dateRange}
+          config={aiConfig}
+          onError={(message) => {
+            showToast('error', message);
+          }}
+        />
+      </Modal>
     </div>
   )
 }
