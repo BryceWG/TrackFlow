@@ -435,6 +435,16 @@ function App() {
               )}
             </div>
           </nav>
+
+          {/* AI 设置按钮 */}
+          <div className="p-4 border-t">
+            <button
+              onClick={() => setIsAIConfigOpen(true)}
+              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+            >
+              AI 设置
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -456,24 +466,15 @@ function App() {
               </h1>
               <div className="flex items-center gap-4">
                 <FilterBar onDateRangeChange={setDateRange} />
-                {selectedProjectId && (
-                  <button
-                    onClick={() => setIsAIAnalysisOpen(true)}
-                    className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
-                  >
-                    <span className="mr-1">AI 分析</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => setIsAIAnalysisOpen(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
+                >
+                  <span className="mr-1">AI 分析</span>
+                </button>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsAIConfigOpen(true)}
-                className="text-sm text-gray-600 hover:text-gray-900"
-                title="配置 AI 服务"
-              >
-                AI 设置
-              </button>
               <button 
                 className="w-full sm:w-auto flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => {

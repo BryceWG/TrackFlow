@@ -9,7 +9,7 @@ interface AIAnalysisProps {
     projectId: string;
     timestamp: string;
   }>;
-  projectName: string;
+  projectName: string | null;
   dateRange: {
     start: string | null;
     end: string | null;
@@ -24,17 +24,24 @@ interface AIAnalysisProps {
   onError: (message: string) => void;
 }
 
-export function AIAnalysis({ entries, projectName, dateRange, config, onError }: AIAnalysisProps) {
+export function AIAnalysis({ entries, projectName, dateRange: initialDateRange, config, onError }: AIAnalysisProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<string>('');
+  const [dateRange, setDateRange] = useState(initialDateRange);
 
   const handleAnalyze = async () => {
+    if (!config.apiKey) {
+      onError('请先配置 AI 服务');
+      return;
+    }
+
     setIsLoading(true);
     setResult('');
 
     try {
       // 准备发送给 AI 的数据
-      const prompt = `以下是项目"${projectName}"从 ${
+      const scopeText = projectName ? `项目"${projectName}"` : '全部记录';
+      const prompt = `以下是${scopeText}从 ${
         dateRange.start ? new Date(dateRange.start).toLocaleDateString() : '开始'
       } 到 ${
         dateRange.end ? new Date(dateRange.end).toLocaleDateString() : '现在'
@@ -89,30 +96,49 @@ export function AIAnalysis({ entries, projectName, dateRange, config, onError }:
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-500">
-          {entries.length} 条记录
-          {dateRange.start && dateRange.end && (
-            <span className="ml-2">
-              {new Date(dateRange.start).toLocaleDateString()} 至{' '}
-              {new Date(dateRange.end).toLocaleDateString()}
-            </span>
-          )}
+      <div className="flex flex-col space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <input
+            type="date"
+            value={dateRange.start || ''}
+            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+            className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          />
+          <span className="text-gray-500">至</span>
+          <input
+            type="date"
+            value={dateRange.end || ''}
+            min={dateRange.start || undefined}
+            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+            className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          />
         </div>
-        <button
-          onClick={handleAnalyze}
-          disabled={isLoading || entries.length === 0}
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? (
-            <>
-              <LoadingSpinner size="sm" className="mr-2" />
-              分析中...
-            </>
-          ) : (
-            '开始分析'
-          )}
-        </button>
+
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            {entries.length} 条记录
+            {dateRange.start && dateRange.end && (
+              <span className="ml-2">
+                {new Date(dateRange.start).toLocaleDateString()} 至{' '}
+                {new Date(dateRange.end).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={handleAnalyze}
+            disabled={isLoading || entries.length === 0}
+            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <LoadingSpinner size="sm" className="mr-2" />
+                分析中...
+              </>
+            ) : (
+              '开始分析'
+            )}
+          </button>
+        </div>
       </div>
 
       {result && (
