@@ -116,35 +116,40 @@ function App() {
     }
   };
 
-  const handleCreateEntry = (entryData: { title: string; content: string; projectId: string }) => {
+  const handleCreateEntry = (entryData: { title: string; content: string; projectId: string; timestamp: string }) => {
     try {
-      if (editingEntry) {
-        const updatedEntries = entries.map(entry => 
-          entry.id === editingEntry.id 
-            ? { ...entry, ...entryData }
-            : entry
-        );
-        setEntries(updatedEntries);
-        setEditingEntry(null);
-        showToast('success', '记录更新成功');
-      } else {
-        const newEntry = {
-          id: Date.now().toString(),
-          ...entryData,
-          timestamp: new Date().toISOString(),
-        };
-        setEntries([newEntry, ...entries]);
-        showToast('success', '记录创建成功');
-      }
+      const newEntry = {
+        id: Date.now().toString(),
+        ...entryData,
+      };
+      setEntries([...entries, newEntry]);
       setIsEntryModalOpen(false);
+      showToast('success', '记录创建成功');
     } catch (error) {
-      showToast('error', editingEntry ? '记录更新失败' : '记录创建失败');
+      showToast('error', '记录创建失败');
     }
   };
 
   const handleEditEntry = (entry: Entry) => {
     setEditingEntry(entry);
     setIsEntryModalOpen(true);
+  };
+
+  const handleUpdateEntry = (entryData: { title: string; content: string; projectId: string; timestamp: string }) => {
+    try {
+      if (!editingEntry) return;
+      const updatedEntries = entries.map(entry => 
+        entry.id === editingEntry.id 
+          ? { ...entry, ...entryData }
+          : entry
+      );
+      setEntries(updatedEntries);
+      setIsEntryModalOpen(false);
+      setEditingEntry(null);
+      showToast('success', '记录更新成功');
+    } catch (error) {
+      showToast('error', '记录更新失败');
+    }
   };
 
   const handleDeleteEntry = (entryId: string) => {
@@ -537,7 +542,7 @@ function App() {
       >
         <EntryForm
           projects={projects}
-          onSubmit={handleCreateEntry}
+          onSubmit={editingEntry ? handleUpdateEntry : handleCreateEntry}
           onCancel={() => {
             setIsEntryModalOpen(false);
             setEditingEntry(null);
@@ -547,6 +552,7 @@ function App() {
             title: editingEntry.title,
             content: editingEntry.content,
             projectId: editingEntry.projectId,
+            timestamp: editingEntry.timestamp
           } : {
             title: '',
             content: '',

@@ -8,12 +8,13 @@ interface Project {
 
 interface EntryFormProps {
   projects: Project[];
-  onSubmit: (entry: { title: string; content: string; projectId: string }) => void;
+  onSubmit: (entry: { title: string; content: string; projectId: string; timestamp: string }) => void;
   onCancel: () => void;
   initialData?: {
     title: string;
     content: string;
     projectId: string;
+    timestamp?: string;
   };
   mode?: 'create' | 'edit';
 }
@@ -22,6 +23,7 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [projectId, setProjectId] = useState('');
+  const [timestamp, setTimestamp] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -29,8 +31,16 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
       setTitle(initialData.title);
       setContent(initialData.content);
       setProjectId(initialData.projectId);
+      if (initialData.timestamp) {
+        // 将 ISO 字符串转换为本地时间
+        const date = new Date(initialData.timestamp);
+        setTimestamp(date.toISOString().slice(0, 16)); // 格式: "YYYY-MM-DDTHH:mm"
+      }
     } else if (initialData?.projectId) {
       setProjectId(initialData.projectId);
+      // 设置默认时间为当前时间
+      const now = new Date();
+      setTimestamp(now.toISOString().slice(0, 16));
     }
   }, [mode, initialData]);
 
@@ -49,16 +59,23 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
       return;
     }
 
+    if (!timestamp) {
+      setError('请选择记录时间');
+      return;
+    }
+
     onSubmit({ 
       title: title.trim(), 
       content: content.trim(), 
-      projectId 
+      projectId,
+      timestamp: new Date(timestamp).toISOString()
     });
 
     if (mode === 'create') {
       setTitle('');
       setContent('');
       setProjectId('');
+      setTimestamp('');
     }
   };
 
@@ -96,6 +113,20 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label htmlFor="timestamp" className="block text-sm font-medium text-gray-700">
+          记录时间 <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="datetime-local"
+          id="timestamp"
+          value={timestamp}
+          onChange={(e) => setTimestamp(e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          required
+        />
       </div>
 
       <div>
