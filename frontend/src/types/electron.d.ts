@@ -5,6 +5,7 @@ interface Window {
     upload: (params: { path: string; data: string }) => Promise<{ success: boolean; error?: string }>;
     download: (path: string) => Promise<{ success: boolean; data?: string; error?: string }>;
     list: (path: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+    delete: (path: string) => Promise<{ success: boolean; error?: string }>;
   };
   fileOps: {
     saveJsonFile: (data: string) => Promise<{ success: boolean; error?: string }>;

@@ -27,7 +27,10 @@ contextBridge.exposeInMainWorld('webdav', {
     ipcRenderer.invoke('webdav-download', path),
   
   list: (path: string) => 
-    ipcRenderer.invoke('webdav-list', path)
+    ipcRenderer.invoke('webdav-list', path),
+
+  delete: (path: string) =>
+    ipcRenderer.invoke('webdav-delete', path),
 }); 
 
 contextBridge.exposeInMainWorld('fileOps', {

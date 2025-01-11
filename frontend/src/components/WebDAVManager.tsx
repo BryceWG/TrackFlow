@@ -213,6 +213,72 @@ export function WebDAVManager({
     }
   };
 
+  // 添加删除文件功能
+  const handleDeleteFile = async (file: { filename: string; path: string }) => {
+    setIsLoading(true);
+    setMessage('');
+
+    try {
+      const result = await window.webdav.delete(file.path);
+      if (result.success) {
+        setMessage('文件删除成功！');
+        await fetchBackupFiles(); // 刷新文件列表
+      } else {
+        setMessage(result.error || '删除失败');
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '删除失败');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 添加一键清理功能
+  const handleCleanupFiles = async () => {
+    if (backupFiles.length <= 3) {
+      setMessage('没有需要清理的文件');
+      return;
+    }
+
+    setConfirmDialog({
+      isOpen: true,
+      title: '清理备份文件',
+      message: '是否只保留最新的3个备份文件？其他文件将被删除。',
+      type: 'warning',
+      onConfirm: async () => {
+        setIsLoading(true);
+        setMessage('');
+
+        try {
+          // 保留最新的3个文件，删除其他文件
+          const filesToDelete = backupFiles.slice(3);
+          let successCount = 0;
+          let failCount = 0;
+
+          for (const file of filesToDelete) {
+            try {
+              const result = await window.webdav.delete(file.path);
+              if (result.success) {
+                successCount++;
+              } else {
+                failCount++;
+              }
+            } catch {
+              failCount++;
+            }
+          }
+
+          await fetchBackupFiles(); // 刷新文件列表
+          setMessage(`清理完成！成功: ${successCount}, 失败: ${failCount}`);
+        } catch (err) {
+          setMessage(err instanceof Error ? err.message : '清理失败');
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    });
+  };
+
   if (!config && !isConfigOpen) {
     return (
       <div className="space-y-4">
@@ -333,7 +399,19 @@ export function WebDAVManager({
 
         {/* 备份文件列表 */}
         <div className="mt-4">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">备份文件列表</h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-gray-900">备份文件列表</h4>
+            {backupFiles.length > 3 && (
+              <button
+                type="button"
+                onClick={handleCleanupFiles}
+                disabled={isLoading}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                保留最新3个备份
+              </button>
+            )}
+          </div>
           {backupFiles.length > 0 ? (
             <div className="space-y-2">
               {backupFiles.map((file) => (
@@ -347,22 +425,40 @@ export function WebDAVManager({
                       {new Date(file.lastmod).toLocaleString('zh-CN')}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfirmDialog({
-                        isOpen: true,
-                        title: '恢复数据',
-                        message: '确定要恢复数据吗？当前的数据将被覆盖。',
-                        type: 'warning' as const,
-                        onConfirm: () => handleRestore(file),
-                      });
-                    }}
-                    disabled={isLoading}
-                    className="ml-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                  >
-                    恢复此备份
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmDialog({
+                          isOpen: true,
+                          title: '恢复数据',
+                          message: '确定要恢复数据吗？当前的数据将被覆盖。',
+                          type: 'warning' as const,
+                          onConfirm: () => handleRestore(file),
+                        });
+                      }}
+                      disabled={isLoading}
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                    >
+                      恢复此备份
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmDialog({
+                          isOpen: true,
+                          title: '删除备份',
+                          message: '确定要删除这个备份文件吗？此操作无法撤销。',
+                          type: 'danger' as const,
+                          onConfirm: () => handleDeleteFile(file),
+                        });
+                      }}
+                      disabled={isLoading}
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                    >
+                      删除
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

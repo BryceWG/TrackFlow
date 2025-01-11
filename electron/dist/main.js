@@ -227,3 +227,18 @@ main_1.ipcMain.handle('load-json-file', async (_event) => {
         };
     }
 });
+main_1.ipcMain.handle('webdav-delete', async (_event, path) => {
+    if (!webdavClient) {
+        return { success: false, error: '未连接到 WebDAV 服务器' };
+    }
+    try {
+        await webdavClient.deleteFile(path);
+        return { success: true };
+    }
+    catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : '删除文件失败'
+        };
+    }
+});

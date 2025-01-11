@@ -7,7 +7,8 @@ renderer_1.contextBridge.exposeInMainWorld('webdav', {
     test: () => renderer_1.ipcRenderer.invoke('webdav-test'),
     upload: (path, data) => renderer_1.ipcRenderer.invoke('webdav-upload', { path, data }),
     download: (path) => renderer_1.ipcRenderer.invoke('webdav-download', path),
-    list: (path) => renderer_1.ipcRenderer.invoke('webdav-list', path)
+    list: (path) => renderer_1.ipcRenderer.invoke('webdav-list', path),
+    delete: (path) => renderer_1.ipcRenderer.invoke('webdav-delete', path),
 });
 renderer_1.contextBridge.exposeInMainWorld('fileOps', {
     saveJsonFile: async (data) => {

@@ -204,4 +204,20 @@ ipcMain.handle('load-json-file', async (_event: IpcMainInvokeEvent) => {
       error: error instanceof Error ? error.message : '读取文件失败' 
     };
   }
+});
+
+ipcMain.handle('webdav-delete', async (_event: IpcMainInvokeEvent, path: string) => {
+  if (!webdavClient) {
+    return { success: false, error: '未连接到 WebDAV 服务器' };
+  }
+
+  try {
+    await webdavClient.deleteFile(path);
+    return { success: true };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '删除文件失败' 
+    };
+  }
 }); 
