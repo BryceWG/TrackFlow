@@ -4,44 +4,54 @@ services:
   # MongoDB 服务
   mongodb:
     image: mongo:latest
-    restart: always
+    restart: unless-stopped
     ports:
       - "${DOCKER_MONGODB_PORT}:27017"
     volumes:
       - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
     networks:
       - tf_network
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
+    environment:
+      - MONGODB_INITDB_ROOT_USERNAME=admin
+      - MONGODB_INITDB_ROOT_PASSWORD=password123
 
   # 后端服务
   backend:
-    build: ./backend
-    restart: always
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
     depends_on:
       mongodb:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/trackflow?authSource=admin
     ports:
       - "${DOCKER_BACKEND_PORT}:${PORT}"
     networks:
       - tf_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PORT}/api/health"]
+      test: wget --no-verbose --tries=1 --spider http://localhost:${PORT}/api/health || exit 1
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
 
   # 前端服务
   frontend:
-    build: ./frontend
-    restart: always
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
@@ -58,4 +68,6 @@ networks:
 
 volumes:
   mongodb_data:
+    driver: local
+  mongodb_config:
     driver: local 
