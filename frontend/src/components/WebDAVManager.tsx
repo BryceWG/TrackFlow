@@ -153,6 +153,66 @@ export function WebDAVManager({
     setIsConfigOpen(false);
   };
 
+  // 添加本地文件备份功能
+  const handleLocalBackup = async () => {
+    setIsLoading(true);
+    setMessage('');
+
+    try {
+      const backupData = {
+        projects,
+        entries,
+        users,
+        promptPresets,
+      };
+      const result = await window.fileOps.saveJsonFile(JSON.stringify(backupData, null, 2));
+      
+      if (result.success) {
+        setMessage('本地备份成功！');
+      } else {
+        setMessage(result.error || '本地备份失败');
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '本地备份失败');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 添加本地文件恢复功能
+  const handleLocalRestore = async () => {
+    setIsLoading(true);
+    setMessage('');
+
+    try {
+      const result = await window.fileOps.loadJsonFile();
+      
+      if (result.success && result.data) {
+        try {
+          const data = JSON.parse(result.data);
+          setConfirmDialog({
+            isOpen: true,
+            title: '恢复数据',
+            message: '确定要恢复数据吗？当前的数据将被覆盖。',
+            type: 'warning',
+            onConfirm: () => {
+              onRestore(data);
+              setMessage('本地恢复成功！');
+            },
+          });
+        } catch (parseError) {
+          setMessage('解析备份文件失败');
+        }
+      } else {
+        setMessage(result.error || '本地恢复失败');
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '本地恢复失败');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!config && !isConfigOpen) {
     return (
       <div className="space-y-4">
@@ -222,7 +282,23 @@ export function WebDAVManager({
             disabled={isLoading}
             className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
-            {isLoading ? <LoadingSpinner size="sm" /> : '备份数据'}
+            {isLoading ? <LoadingSpinner size="sm" /> : 'WebDAV 备份'}
+          </button>
+          <button
+            type="button"
+            onClick={handleLocalBackup}
+            disabled={isLoading}
+            className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+          >
+            {isLoading ? <LoadingSpinner size="sm" /> : '导出备份'}
+          </button>
+          <button
+            type="button"
+            onClick={handleLocalRestore}
+            disabled={isLoading}
+            className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50"
+          >
+            {isLoading ? <LoadingSpinner size="sm" /> : '导入备份'}
           </button>
         </div>
 

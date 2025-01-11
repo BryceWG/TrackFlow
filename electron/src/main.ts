@@ -151,4 +151,57 @@ ipcMain.handle('webdav-list', async (_event: IpcMainInvokeEvent, path: string) =
       error: error instanceof Error ? error.message : '获取文件列表失败' 
     };
   }
+});
+
+// 文件操作相关 IPC 处理
+ipcMain.handle('save-json-file', async (_event: IpcMainInvokeEvent, data: string) => {
+  try {
+    const { dialog } = await import('electron');
+    const defaultPath = `trackflow-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    
+    const { filePath } = await dialog.showSaveDialog(mainWindow!, {
+      title: '保存备份文件',
+      defaultPath: defaultPath,
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] }
+      ]
+    });
+
+    if (filePath) {
+      const fs = await import('fs/promises');
+      await fs.writeFile(filePath, data, 'utf-8');
+      return { success: true };
+    }
+    return { success: false, error: '未选择保存位置' };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '保存文件失败' 
+    };
+  }
+});
+
+ipcMain.handle('load-json-file', async (_event: IpcMainInvokeEvent) => {
+  try {
+    const { dialog } = await import('electron');
+    const { filePaths } = await dialog.showOpenDialog(mainWindow!, {
+      title: '选择备份文件',
+      properties: ['openFile'],
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] }
+      ]
+    });
+
+    if (filePaths.length > 0) {
+      const fs = await import('fs/promises');
+      const data = await fs.readFile(filePaths[0], 'utf-8');
+      return { success: true, data };
+    }
+    return { success: false, error: '未选择文件' };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '读取文件失败' 
+    };
+  }
 }); 

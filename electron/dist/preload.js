@@ -9,3 +9,11 @@ renderer_1.contextBridge.exposeInMainWorld('webdav', {
     download: (path) => renderer_1.ipcRenderer.invoke('webdav-download', path),
     list: (path) => renderer_1.ipcRenderer.invoke('webdav-list', path)
 });
+renderer_1.contextBridge.exposeInMainWorld('fileOps', {
+    saveJsonFile: async (data) => {
+        return await renderer_1.ipcRenderer.invoke('save-json-file', data);
+    },
+    loadJsonFile: async () => {
+        return await renderer_1.ipcRenderer.invoke('load-json-file');
+    },
+});

@@ -29,3 +29,12 @@ contextBridge.exposeInMainWorld('webdav', {
   list: (path: string) => 
     ipcRenderer.invoke('webdav-list', path)
 }); 
+
+contextBridge.exposeInMainWorld('fileOps', {
+  saveJsonFile: async (data: string) => {
+    return await ipcRenderer.invoke('save-json-file', data);
+  },
+  loadJsonFile: async () => {
+    return await ipcRenderer.invoke('load-json-file');
+  },
+}); 
