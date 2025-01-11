@@ -215,16 +215,8 @@ export function WebDAVManager({
       if (result.success && result.data) {
         try {
           const data = JSON.parse(result.data);
-          setConfirmDialog({
-            isOpen: true,
-            title: '恢复数据',
-            message: '确定要恢复数据吗？当前的数据将被覆盖。',
-            type: 'warning',
-            onConfirm: () => {
-              onRestore(data);
-              setMessage('本地恢复成功！');
-            },
-          });
+          onRestore(data);
+          setMessage('本地恢复成功！');
         } catch (parseError) {
           setMessage('解析备份文件失败');
         }
@@ -236,6 +228,17 @@ export function WebDAVManager({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // 添加本地文件恢复按钮的点击处理
+  const handleLocalRestoreClick = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: '恢复数据',
+      message: '确定要恢复数据吗？当前的数据将被覆盖。',
+      type: 'warning',
+      onConfirm: handleLocalRestore,
+    });
   };
 
   // 添加删除文件功能
@@ -341,7 +344,7 @@ export function WebDAVManager({
             </button>
             <button
               type="button"
-              onClick={handleLocalRestore}
+              onClick={handleLocalRestoreClick}
               disabled={isLoading}
               className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50"
             >
@@ -514,7 +517,7 @@ export function WebDAVManager({
           </button>
           <button
             type="button"
-            onClick={handleLocalRestore}
+            onClick={handleLocalRestoreClick}
             disabled={isLoading}
             className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50"
           >
