@@ -1,13 +1,13 @@
 {
   "name": "trackflow",
   "version": "1.0.0",
-  "description": "TrackFlow Desktop App",
+  "description": "TrackFlow - 时间记录与分析工具",
   "main": "dist/main.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=development electron .",
-    "build": "tsc",
-    "watch": "tsc -w",
+    "start": "electron .",
     "dev": "concurrently \"npm run watch\" \"npm run start\"",
+    "watch": "tsc -w",
+    "build": "tsc",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
@@ -19,25 +19,39 @@
     },
     "files": [
       "dist/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      {
+        "from": "../frontend/dist",
+        "to": "resources/frontend/dist",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TrackFlow"
     }
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^20.11.5",
+    "@types/node": "^20.10.6",
     "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3",
-    "electron": "^28.1.4",
+    "electron": "^28.1.1",
     "electron-builder": "^24.9.1",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "webdav": "^4.11.4"
+    "webdav": "^5.3.1"
   }
 }

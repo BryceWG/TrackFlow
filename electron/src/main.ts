@@ -1,5 +1,5 @@
 /// <reference types="electron" />
-import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron/main';
+import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, protocol } from 'electron/main';
 import * as path from 'path';
 
 let mainWindow: BrowserWindow | null = null;
@@ -12,27 +12,40 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true
     }
   });
 
   // 开发环境下加载本地服务
   if (process.env.NODE_ENV === 'development') {
-    // 在开发环境下清除缓存
-    mainWindow.webContents.session.clearCache();
-    mainWindow.webContents.session.clearStorageData({
-      storages: ['filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
-    });
-    
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
     // 生产环境下加载打包后的文件
-    mainWindow.loadFile(path.join(__dirname, '../../frontend/dist/index.html'));
+    const indexPath = path.join(__dirname, '../resources/frontend/dist/index.html');
+    // 设置基础路径
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+      if (url.startsWith('file:') || url.startsWith('app:')) {
+        return { action: 'allow' };
+      }
+      return { action: 'deny' };
+    });
+    mainWindow.loadURL(`app://./index.html`);
   }
 }
 
-app.whenReady().then(createWindow);
+// 注册自定义协议
+app.whenReady().then(() => {
+  // 注册自定义协议，用于处理本地资源
+  protocol.registerFileProtocol('app', (request, callback) => {
+    const url = request.url.substring(6);
+    const normalizedPath = path.normalize(`${path.join(__dirname, '../resources/frontend/dist')}/${url}`);
+    callback({ path: normalizedPath });
+  });
+
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

@@ -3,19 +3,17 @@ import { User, LoginCredentials } from '../types/user';
 import { useLocalStorage } from './useLocalStorage';
 
 // 使用更安全的加密方法
-function encryptPassword(password: string): string {
-  // 使用一个简单的 salt
+function applySaltToChar(code: number): number {
   const salt = 'trackflow-salt';
-  const textToChars = (text: string) => text.split('').map(c => c.charCodeAt(0));
-  const byteHex = (n: number) => ("0" + Number(n).toString(16)).substr(-2);
-  const applySaltToChar = (code: number) => textToChars(salt).reduce((a, b) => a ^ b, code);
+  const saltSum = Array.from(salt).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return code + saltSum;
+}
 
-  return password
-    .split('')
-    .map(textToChars)
+function encryptPassword(password: string): string {
+  return Array.from(password)
+    .map(char => char.charCodeAt(0))
     .map(applySaltToChar)
-    .map(byteHex)
-    .join('');
+    .join(',');
 }
 
 // 解密密码

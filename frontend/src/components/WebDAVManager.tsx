@@ -20,7 +20,6 @@ export function WebDAVManager({
   users,
   promptPresets,
   onRestore,
-  onClose,
 }: WebDAVManagerProps) {
   const {
     config,
@@ -29,7 +28,6 @@ export function WebDAVManager({
     connect,
     testConnection,
     backup,
-    getLatestBackup,
   } = useWebDAV();
 
   const [isLoading, setIsLoading] = useState(false);
