@@ -30,6 +30,7 @@ interface Project {
   order: number;
   color: string;
   emoji: string;
+  userId: string;
 }
 
 interface Entry {
@@ -38,6 +39,7 @@ interface Entry {
   content: string;
   projectId: string;
   timestamp: string;
+  userId: string;
 }
 
 interface DateRange {
@@ -160,6 +162,7 @@ function App() {
       const newProject = {
         id: Date.now().toString(),
         order: projects.length,
+        userId: currentUser!.id,
         ...projectData,
       };
       setProjects([...projects, newProject]);
@@ -175,6 +178,7 @@ function App() {
       const newEntry = {
         id: Date.now().toString(),
         ...entryData,
+        userId: currentUser!.id,
       };
       setEntries([...entries, newEntry]);
       setIsEntryModalOpen(false);
@@ -270,12 +274,14 @@ function App() {
 
   const filteredEntries = entries
     .filter(entry => {
-      // 项目筛选
+      if (entry.userId !== currentUser?.id) {
+        return false;
+      }
+      
       if (selectedProjectId && entry.projectId !== selectedProjectId) {
         return false;
       }
       
-      // 日期范围筛选
       if (dateRange.start && dateRange.end) {
         const entryDate = new Date(entry.timestamp);
         const start = new Date(dateRange.start);
@@ -289,7 +295,9 @@ function App() {
     })
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-  const sortedProjects = [...projects].sort((a, b) => a.order - b.order);
+  const sortedProjects = [...projects]
+    .filter(project => project.userId === currentUser?.id)
+    .sort((a, b) => a.order - b.order);
 
   // 获取记录数量最多的项目ID
   const getMostUsedProjectId = () => {
