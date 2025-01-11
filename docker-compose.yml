@@ -11,26 +11,40 @@ services:
       - mongodb_data:/data/db
     networks:
       - tf_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # 后端服务
   backend:
     build: ./backend
     restart: always
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     env_file:
       - .env
     ports:
       - "${DOCKER_BACKEND_PORT}:${PORT}"
     networks:
       - tf_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT}/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # 前端服务
   frontend:
     build: ./frontend
     restart: always
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     env_file:
       - .env
     ports:
@@ -43,4 +57,5 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data: 
+  mongodb_data:
+    driver: local 
