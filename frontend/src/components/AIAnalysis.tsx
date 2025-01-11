@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
+import { Preset } from './PromptPresets';
 
 interface AIAnalysisProps {
   entries: Array<{
@@ -21,13 +22,15 @@ interface AIAnalysisProps {
     temperature: number;
     systemPrompt: string;
   };
+  presets: Preset[];
   onError: (message: string) => void;
 }
 
-export function AIAnalysis({ entries, projectName, dateRange: initialDateRange, config, onError }: AIAnalysisProps) {
+export function AIAnalysis({ entries, projectName, dateRange: initialDateRange, config, presets, onError }: AIAnalysisProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<string>('');
   const [dateRange, setDateRange] = useState(initialDateRange);
+  const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null);
 
   const handleAnalyze = async () => {
     if (!config.apiKey) {
@@ -64,7 +67,7 @@ export function AIAnalysis({ entries, projectName, dateRange: initialDateRange, 
           messages: [
             {
               role: 'system',
-              content: config.systemPrompt,
+              content: selectedPreset ? selectedPreset.prompt : config.systemPrompt,
             },
             {
               role: 'user',
@@ -114,6 +117,36 @@ export function AIAnalysis({ entries, projectName, dateRange: initialDateRange, 
           />
         </div>
 
+        {presets.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedPreset(null)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors
+                ${!selectedPreset 
+                  ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                  : 'border-gray-300 hover:border-blue-500 hover:text-blue-600'
+                }`}
+            >
+              默认提示词
+            </button>
+            {presets.map(preset => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => setSelectedPreset(preset)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors
+                  ${selectedPreset?.id === preset.id 
+                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                    : 'border-gray-300 hover:border-blue-500 hover:text-blue-600'
+                  }`}
+              >
+                {preset.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-500">
             {entries.length} 条记录
@@ -121,6 +154,11 @@ export function AIAnalysis({ entries, projectName, dateRange: initialDateRange, 
               <span className="ml-2">
                 {new Date(dateRange.start).toLocaleDateString()} 至{' '}
                 {new Date(dateRange.end).toLocaleDateString()}
+              </span>
+            )}
+            {selectedPreset && (
+              <span className="ml-2">
+                使用"{selectedPreset.name}"分析
               </span>
             )}
           </div>

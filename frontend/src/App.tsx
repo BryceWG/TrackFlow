@@ -18,6 +18,7 @@ import { ConfirmDialog } from './components/ConfirmDialog'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { AIConfig } from './components/AIConfig'
 import { AIAnalysis } from './components/AIAnalysis'
+import { PromptPresets, Preset } from './components/PromptPresets'
 
 interface Project {
   id: string;
@@ -95,6 +96,8 @@ function App() {
   });
   const [isAIConfigOpen, setIsAIConfigOpen] = useState(false);
   const [isAIAnalysisOpen, setIsAIAnalysisOpen] = useState(false);
+  const [isPromptPresetsOpen, setIsPromptPresetsOpen] = useState(false);
+  const [promptPresets, setPromptPresets] = useLocalStorage<Preset[]>('promptPresets', []);
 
   // 模拟加载效果
   useEffect(() => {
@@ -311,7 +314,7 @@ function App() {
   };
 
   if (isLoading) {
-    return (
+  return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
@@ -437,12 +440,18 @@ function App() {
           </nav>
 
           {/* AI 设置按钮 */}
-          <div className="p-4 border-t">
+          <div className="p-4 border-t space-y-2">
             <button
               onClick={() => setIsAIConfigOpen(true)}
               className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
             >
               AI 设置
+            </button>
+            <button
+              onClick={() => setIsPromptPresetsOpen(true)}
+              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+            >
+              提示词预设
             </button>
           </div>
         </div>
@@ -486,7 +495,7 @@ function App() {
               >
                 <PlusIcon className="w-5 h-5 mr-2" />
                 新建记录
-              </button>
+        </button>
             </div>
           </div>
 
@@ -662,9 +671,27 @@ function App() {
           projectName={getProjectName(selectedProjectId || '')}
           dateRange={dateRange}
           config={aiConfig}
+          presets={promptPresets}
           onError={(message) => {
             showToast('error', message);
           }}
+        />
+      </Modal>
+
+      {/* 提示词预设弹窗 */}
+      <Modal
+        isOpen={isPromptPresetsOpen}
+        onClose={() => setIsPromptPresetsOpen(false)}
+        title="提示词预设管理"
+      >
+        <PromptPresets
+          presets={promptPresets}
+          onSave={(newPresets) => {
+            setPromptPresets(newPresets);
+            setIsPromptPresetsOpen(false);
+            showToast('success', '提示词预设已保存');
+          }}
+          onClose={() => setIsPromptPresetsOpen(false)}
         />
       </Modal>
     </div>
