@@ -1,95 +1,144 @@
 import { useState } from 'react';
 import { User, LoginCredentials } from '../types/user';
-import { useLocalStorage } from './useLocalStorage';
 
-const INITIAL_ADMIN = {
-  id: '1',
-  username: 'admin',
-  password: 'admin123',
-  role: 'admin' as const,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export function useAuth() {
-  const [users, setUsers] = useLocalStorage<User[]>('users', [INITIAL_ADMIN]);
-  const [currentUser, setCurrentUser] = useLocalStorage<User | null>('currentUser', null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('currentUser');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('token');
+  });
   const [error, setError] = useState<string>('');
 
-  const login = ({ username, password }: LoginCredentials) => {
-    const user = users.find(u => u.username === username);
-    if (!user || user.password !== password) {
-      setError('用户名或密码错误');
+  const login = async ({ username, password }: LoginCredentials) => {
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || '登录失败');
+      }
+
+      setCurrentUser(data.user);
+      setToken(data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      localStorage.setItem('token', data.token);
+      setError('');
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '登录失败');
       return false;
     }
-    setCurrentUser(user);
-    setError('');
-    return true;
   };
 
   const logout = () => {
     setCurrentUser(null);
+    setToken(null);
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
   };
 
-  const addUser = (newUser: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const existingUser = users.find(u => u.username === newUser.username);
-    if (existingUser) {
-      throw new Error('用户名已存在');
-    }
+  const addUser = async (newUser: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const response = await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(newUser),
+      });
 
-    const user: User = {
-      ...newUser,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setUsers([...users, user]);
-  };
-
-  const updateUser = (userId: string, updates: Partial<User>) => {
-    if (updates.username) {
-      const existingUser = users.find(
-        u => u.username === updates.username && u.id !== userId
-      );
-      if (existingUser) {
-        throw new Error('用户名已存在');
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || '创建用户失败');
       }
+
+      return data.user;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('创建用户失败');
     }
-
-    const updatedUsers = users.map(user => {
-      if (user.id === userId) {
-        const updatedUser = {
-          ...user,
-          ...updates,
-          updatedAt: new Date().toISOString(),
-        };
-        if (currentUser?.id === userId) {
-          setCurrentUser(updatedUser);
-        }
-        return updatedUser;
-      }
-      return user;
-    });
-
-    setUsers(updatedUsers);
   };
 
-  const deleteUser = (userId: string) => {
-    if (users.length === 1) {
-      throw new Error('不能删除最后一个用户');
-    }
-    
-    const userToDelete = users.find(u => u.id === userId);
-    if (userToDelete?.role === 'admin' && users.filter(u => u.role === 'admin').length === 1) {
-      throw new Error('不能删除最后一个管理员');
-    }
+  const updateUser = async (userId: string, updates: Partial<User>) => {
+    try {
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      });
 
-    setUsers(users.filter(u => u.id !== userId));
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || '更新用户失败');
+      }
+
+      if (currentUser?.id === userId) {
+        const updatedUser = { ...currentUser, ...data };
+        setCurrentUser(updatedUser);
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      }
+
+      return data;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('更新用户失败');
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || '删除用户失败');
+      }
+
+      if (currentUser?.id === userId) {
+        logout();
+      }
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('删除用户失败');
+    }
+  };
+
+  const getUsers = async () => {
+    try {
+      const response = await fetch(`${API_URL}/users`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || '获取用户列表失败');
+      }
+
+      return data;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('获取用户列表失败');
+    }
   };
 
   return {
-    users,
     currentUser,
     error,
     isAuthenticated: !!currentUser,
@@ -98,5 +147,6 @@ export function useAuth() {
     addUser,
     updateUser,
     deleteUser,
+    getUsers,
   };
 } 
