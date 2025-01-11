@@ -1,23 +1,21 @@
+export type UserRole = 'admin' | 'user';
+
 export interface User {
   id: string;
   username: string;
-  email: string;
-  role: 'admin' | 'user';
+  password: string;
+  role: UserRole;
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface LoginForm {
+export interface LoginCredentials {
   username: string;
   password: string;
 }
 
-export interface RegisterForm extends LoginForm {
-  email: string;
-  confirmPassword: string;
-}
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
+export interface UserState {
+  currentUser: User | null;
   isAuthenticated: boolean;
+  users: User[];
 } 

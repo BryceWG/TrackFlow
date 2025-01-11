@@ -1,139 +1,191 @@
 import { useState } from 'react';
-import { User } from '../types/user';
+import { User, UserRole } from '../types/user';
 import { Modal } from './Modal';
-import { ConfirmDialog } from './ConfirmDialog';
+import { PencilIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 interface UserManagementProps {
   users: User[];
-  onUpdateUser: (userId: string, role: 'admin' | 'user') => void;
+  currentUser: User;
+  onAddUser: (user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onUpdateUser: (userId: string, updates: Partial<User>) => void;
   onDeleteUser: (userId: string) => void;
-  currentUserId: string;
+  onClose: () => void;
 }
 
-export function UserManagement({ users, onUpdateUser, onDeleteUser, currentUserId }: UserManagementProps) {
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    userId: string;
-    action: 'delete' | 'role';
-    newRole?: 'admin' | 'user';
-  }>({
-    isOpen: false,
-    userId: '',
-    action: 'delete',
+interface UserFormData {
+  username: string;
+  password: string;
+  role: UserRole;
+}
+
+export function UserManagement({
+  users,
+  currentUser,
+  onAddUser,
+  onUpdateUser,
+  onDeleteUser,
+  onClose
+}: UserManagementProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState<UserFormData>({
+    username: '',
+    password: '',
+    role: 'user'
   });
 
-  const handleRoleChange = (userId: string, newRole: 'admin' | 'user') => {
-    setConfirmDialog({
-      isOpen: true,
-      userId,
-      action: 'role',
-      newRole,
-    });
-  };
-
-  const handleDeleteUser = (userId: string) => {
-    setConfirmDialog({
-      isOpen: true,
-      userId,
-      action: 'delete',
-    });
-  };
-
-  const handleConfirm = () => {
-    if (confirmDialog.action === 'delete') {
-      onDeleteUser(confirmDialog.userId);
-    } else if (confirmDialog.action === 'role' && confirmDialog.newRole) {
-      onUpdateUser(confirmDialog.userId, confirmDialog.newRole);
+  const handleOpenModal = (user?: User) => {
+    if (user) {
+      setEditingUser(user);
+      setFormData({
+        username: user.username,
+        password: '',
+        role: user.role
+      });
+    } else {
+      setEditingUser(null);
+      setFormData({
+        username: '',
+        password: '',
+        role: 'user'
+      });
     }
-    setConfirmDialog({ ...confirmDialog, isOpen: false });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = () => {
+    if (editingUser) {
+      const updates: Partial<User> = {
+        username: formData.username,
+        role: formData.role
+      };
+      if (formData.password) {
+        updates.password = formData.password;
+      }
+      onUpdateUser(editingUser.id, updates);
+    } else {
+      onAddUser(formData);
+    }
+    setIsModalOpen(false);
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8">
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-xl font-semibold text-gray-900">用户管理</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            管理系统中的所有用户账户，包括角色分配和账户删除。
-          </p>
-        </div>
-      </div>
-      <div className="mt-8 flex flex-col">
-        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                      用户名
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      邮箱
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      角色
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      注册时间
-                    </th>
-                    <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                      <span className="sr-only">操作</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {users.map((user) => (
-                    <tr key={user.id}>
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                        {user.username}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{user.email}</td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <select
-                          value={user.role}
-                          onChange={(e) => handleRoleChange(user.id, e.target.value as 'admin' | 'user')}
-                          disabled={user.id === currentUserId}
-                          className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
-                        >
-                          <option value="user">普通用户</option>
-                          <option value="admin">管理员</option>
-                        </select>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {new Date(user.createdAt).toLocaleString()}
-                      </td>
-                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                        {user.id !== currentUserId && (
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            删除
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-medium text-gray-900">用户管理</h2>
+        <button
+          onClick={() => handleOpenModal()}
+          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+        >
+          <PlusIcon className="w-4 h-4 mr-1" />
+          添加用户
+        </button>
       </div>
 
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-        onConfirm={handleConfirm}
-        title={confirmDialog.action === 'delete' ? '删除用户' : '修改用户角色'}
-        message={
-          confirmDialog.action === 'delete'
-            ? '确定要删除这个用户吗？此操作无法撤销。'
-            : '确定要修改该用户的角色吗？'
-        }
-        type={confirmDialog.action === 'delete' ? 'danger' : 'warning'}
-      />
+      <div className="mt-4 space-y-2">
+        {users.map(user => (
+          <div
+            key={user.id}
+            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+          >
+            <div>
+              <div className="font-medium">{user.username}</div>
+              <div className="text-sm text-gray-500">
+                {user.role === 'admin' ? '管理员' : '普通用户'}
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              {(currentUser.id === user.id || currentUser.role === 'admin') && (
+                <button
+                  onClick={() => handleOpenModal(user)}
+                  className="p-1 text-gray-600 hover:text-gray-900"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                </button>
+              )}
+              {currentUser.role === 'admin' && currentUser.id !== user.id && (
+                <button
+                  onClick={() => onDeleteUser(user.id)}
+                  className="p-1 text-red-600 hover:text-red-700"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-end pt-4 border-t">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+        >
+          关闭
+        </button>
+      </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingUser ? '编辑用户' : '添加用户'}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              用户名
+            </label>
+            <input
+              type="text"
+              value={formData.username}
+              onChange={e => setFormData({ ...formData, username: e.target.value })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              {editingUser ? '新密码（留空保持不变）' : '密码'}
+            </label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={e => setFormData({ ...formData, password: e.target.value })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              required={!editingUser}
+            />
+          </div>
+          {currentUser.role === 'admin' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                角色
+              </label>
+              <select
+                value={formData.role}
+                onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              >
+                <option value="user">普通用户</option>
+                <option value="admin">管理员</option>
+              </select>
+            </div>
+          )}
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              取消
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              {editingUser ? '保存' : '创建'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 } 

@@ -1,22 +1,18 @@
 import { useState } from 'react';
-import { LoginForm } from '../types/user';
+import { LoginCredentials } from '../types/user';
 
 interface LoginProps {
-  onLogin: (data: LoginForm) => void;
-  onRegister: () => void;
-  isLoading?: boolean;
+  onLogin: (credentials: LoginCredentials) => void;
   error?: string;
 }
 
-export function Login({ onLogin, onRegister, isLoading, error }: LoginProps) {
-  const [formData, setFormData] = useState<LoginForm>({
-    username: '',
-    password: '',
-  });
+export function Login({ onLogin, error }: LoginProps) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(formData);
+    onLogin({ username, password });
   };
 
   return (
@@ -24,7 +20,7 @@ export function Login({ onLogin, onRegister, isLoading, error }: LoginProps) {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            登录到您的账户
+            登录到 TrackFlow
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -40,8 +36,8 @@ export function Login({ onLogin, onRegister, isLoading, error }: LoginProps) {
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="用户名"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div>
@@ -55,8 +51,8 @@ export function Login({ onLogin, onRegister, isLoading, error }: LoginProps) {
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="密码"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </div>
@@ -70,20 +66,9 @@ export function Login({ onLogin, onRegister, isLoading, error }: LoginProps) {
           <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              {isLoading ? '登录中...' : '登录'}
-            </button>
-          </div>
-
-          <div className="text-sm text-center">
-            <button
-              type="button"
-              onClick={onRegister}
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              还没有账户？立即注册
+              登录
             </button>
           </div>
         </form>
