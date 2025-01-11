@@ -4,14 +4,18 @@ FROM node:18-alpine
 # 设置工作目录
 WORKDIR /app
 
-# 复制 package.json 和 package-lock.json
+# 复制 package.json 和 package-lock.json（如果存在）
 COPY package*.json ./
 
 # 安装依赖
 RUN npm install
 
-# 复制源代码
-COPY . .
+# 创建 src 目录
+RUN mkdir -p src
+
+# 复制源代码和配置文件
+COPY tsconfig.json ./
+COPY src ./src
 
 # 构建应用
 RUN npm run build
