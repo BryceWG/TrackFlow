@@ -32,7 +32,7 @@ export function WebDAVManager({
   } = useWebDAV();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(!config);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [message, setMessage] = useState('');
 
   const handleBackup = async () => {
@@ -89,19 +89,45 @@ export function WebDAVManager({
     }
   };
 
+  if (!config && !isConfigOpen) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-900">WebDAV 数据管理</h3>
+        </div>
+        <div className="text-sm text-gray-500">请先配置 WebDAV 服务器</div>
+        <button
+          type="button"
+          onClick={() => setIsConfigOpen(true)}
+          className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          配置 WebDAV
+        </button>
+        <Modal
+          isOpen={isConfigOpen}
+          onClose={() => setIsConfigOpen(false)}
+          title="WebDAV 配置"
+        >
+          <WebDAVConfig
+            onClose={() => setIsConfigOpen(false)}
+            onSave={handleConfigSave}
+          />
+        </Modal>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium text-gray-900">WebDAV 数据管理</h3>
-        {config && (
-          <button
-            type="button"
-            onClick={() => setIsConfigOpen(true)}
-            className="text-sm text-blue-600 hover:text-blue-700"
-          >
-            修改配置
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setIsConfigOpen(true)}
+          className="text-sm text-blue-600 hover:text-blue-700"
+        >
+          修改配置
+        </button>
       </div>
 
       {error && <div className="text-sm text-red-600">{error}</div>}
@@ -111,60 +137,48 @@ export function WebDAVManager({
         </div>
       )}
 
-      {!isConfigOpen && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              {isConnected ? '已连接到 WebDAV 服务器' : '未连接到 WebDAV 服务器'}
-            </div>
-            <button
-              type="button"
-              onClick={testConnection}
-              disabled={isLoading}
-              className="text-sm text-blue-600 hover:text-blue-700"
-            >
-              测试连接
-            </button>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            {isConnected ? '已连接到 WebDAV 服务器' : '未连接到 WebDAV 服务器'}
           </div>
-
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={handleBackup}
-              disabled={isLoading || !isConnected}
-              className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {isLoading ? <LoadingSpinner size="sm" /> : '备份数据'}
-            </button>
-            <button
-              type="button"
-              onClick={handleRestore}
-              disabled={isLoading || !isConnected}
-              className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-            >
-              {isLoading ? <LoadingSpinner size="sm" /> : '恢复数据'}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={testConnection}
+            disabled={isLoading}
+            className="text-sm text-blue-600 hover:text-blue-700"
+          >
+            测试连接
+          </button>
         </div>
-      )}
+
+        <div className="flex space-x-3">
+          <button
+            type="button"
+            onClick={handleBackup}
+            disabled={isLoading || !isConnected}
+            className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            {isLoading ? <LoadingSpinner size="sm" /> : '备份数据'}
+          </button>
+          <button
+            type="button"
+            onClick={handleRestore}
+            disabled={isLoading || !isConnected}
+            className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+          >
+            {isLoading ? <LoadingSpinner size="sm" /> : '恢复数据'}
+          </button>
+        </div>
+      </div>
 
       <Modal
         isOpen={isConfigOpen}
-        onClose={() => {
-          if (config) {
-            setIsConfigOpen(false);
-            onClose();
-          }
-        }}
+        onClose={() => setIsConfigOpen(false)}
         title="WebDAV 配置"
       >
         <WebDAVConfig
-          onClose={() => {
-            if (config) {
-              setIsConfigOpen(false);
-              onClose();
-            }
-          }}
+          onClose={() => setIsConfigOpen(false)}
           onSave={handleConfigSave}
         />
       </Modal>

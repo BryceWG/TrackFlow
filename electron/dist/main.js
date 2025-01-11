@@ -78,7 +78,31 @@ main_1.ipcMain.handle('webdav-connect', async (_event, config) => {
             password: config.password
         });
         // 测试连接
-        await webdavClient.getDirectoryContents('/');
+        try {
+            await webdavClient.getDirectoryContents('/');
+        }
+        catch (err) {
+            // 如果目录不存在，尝试创建
+            const error = err;
+            if (error?.response?.status === 404) {
+                try {
+                    await webdavClient.createDirectory('/');
+                }
+                catch (createError) {
+                    // 忽略创建错误，因为目录可能已存在
+                }
+            }
+        }
+        // 确保 trackflow 目录存在
+        try {
+            await webdavClient.getDirectoryContents('/trackflow');
+        }
+        catch (err) {
+            const error = err;
+            if (error?.response?.status === 404) {
+                await webdavClient.createDirectory('/trackflow');
+            }
+        }
         return { success: true };
     }
     catch (error) {
