@@ -2,10 +2,40 @@ import { useState } from 'react';
 import { User, LoginCredentials } from '../types/user';
 import { useLocalStorage } from './useLocalStorage';
 
+// 使用更安全的加密方法
+function encryptPassword(password: string): string {
+  // 使用一个简单的 salt
+  const salt = 'trackflow-salt';
+  const textToChars = (text: string) => text.split('').map(c => c.charCodeAt(0));
+  const byteHex = (n: number) => ("0" + Number(n).toString(16)).substr(-2);
+  const applySaltToChar = (code: number) => textToChars(salt).reduce((a, b) => a ^ b, code);
+
+  return password
+    .split('')
+    .map(textToChars)
+    .map(applySaltToChar)
+    .map(byteHex)
+    .join('');
+}
+
+// 解密密码
+function decryptPassword(encoded: string): string {
+  const salt = 'trackflow-salt';
+  const textToChars = (text: string) => text.split('').map(c => c.charCodeAt(0));
+  const applySaltToChar = (code: number) => textToChars(salt).reduce((a, b) => a ^ b, code);
+  
+  return encoded
+    .match(/.{1,2}/g)!
+    .map(hex => parseInt(hex, 16))
+    .map(applySaltToChar)
+    .map(charCode => String.fromCharCode(charCode))
+    .join('');
+}
+
 const INITIAL_ADMIN = {
   id: '1',
   username: 'admin',
-  password: 'admin123',
+  password: encryptPassword('admin123'),
   role: 'admin' as const,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -18,7 +48,7 @@ export function useAuth() {
 
   const login = ({ username, password }: LoginCredentials) => {
     const user = users.find(u => u.username === username);
-    if (!user || user.password !== password) {
+    if (!user || decryptPassword(user.password) !== password) {
       setError('用户名或密码错误');
       return false;
     }
@@ -39,6 +69,7 @@ export function useAuth() {
 
     const user: User = {
       ...newUser,
+      password: encryptPassword(newUser.password),
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -62,6 +93,7 @@ export function useAuth() {
         const updatedUser = {
           ...user,
           ...updates,
+          password: updates.password ? encryptPassword(updates.password) : user.password,
           updatedAt: new Date().toISOString(),
         };
         if (currentUser?.id === userId) {

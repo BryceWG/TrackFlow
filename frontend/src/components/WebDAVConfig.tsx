@@ -1,118 +1,111 @@
-import { useState } from 'react';
-import { LoadingSpinner } from './LoadingSpinner';
+import { useState, useEffect } from 'react';
+import { useWebDAV } from '../hooks/useWebDAV';
 
 interface WebDAVConfigProps {
   onClose: () => void;
-  onSave: (config: { url: string; username: string; password: string }) => void;
+  onSave: (config: { url: string; username: string; password: string }) => Promise<void>;
 }
 
 export function WebDAVConfig({ onClose, onSave }: WebDAVConfigProps) {
-  const [url, setUrl] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const { config, error } = useWebDAV();
+  const [url, setUrl] = useState(config?.url || '');
+  const [username, setUsername] = useState(config?.username || '');
+  const [password, setPassword] = useState(config?.password || '');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
 
-  const handleTest = async () => {
-    if (!url || !username || !password) {
-      setError('请填写完整的配置信息');
-      return;
+  useEffect(() => {
+    if (error) {
+      setLocalError(error);
     }
+  }, [error]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setLocalError('');
 
     try {
-      const result = await window.webdav.connect({ url, username, password });
-      if (result.success) {
-        setError('连接成功！');
-      } else {
-        setError(result.error || '连接失败');
-      }
+      await onSave({ url, username, password });
     } catch (err) {
-      setError(err instanceof Error ? err.message : '连接失败');
+      setLocalError(err instanceof Error ? err.message : '保存失败');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSave = () => {
-    if (!url || !username || !password) {
-      setError('请填写完整的配置信息');
-      return;
-    }
-    onSave({ url, username, password });
-  };
-
   return (
-    <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {localError && (
+        <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+          {localError}
+        </div>
+      )}
+
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          WebDAV 服务器地址
+        <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+          服务器地址
         </label>
         <input
-          type="text"
+          type="url"
+          id="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://example.com/webdav/"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          placeholder="https://dav.jianguoyun.com/dav/"
+          required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label htmlFor="username" className="block text-sm font-medium text-gray-700">
           用户名
         </label>
         <input
           type="text"
+          id="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
           密码
         </label>
         <input
           type="password"
+          id="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          required
         />
+        {url.includes('jianguoyun') && (
+          <p className="mt-1 text-sm text-gray-500">
+            注意：如果使用坚果云，请使用应用密码而不是登录密码
+          </p>
+        )}
       </div>
-
-      {error && (
-        <div className={`text-sm ${error.includes('成功') ? 'text-green-600' : 'text-red-600'}`}>
-          {error}
-        </div>
-      )}
 
       <div className="flex justify-end space-x-3">
         <button
           type="button"
-          onClick={handleTest}
-          disabled={isLoading}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          {isLoading ? <LoadingSpinner size="sm" /> : '测试连接'}
-        </button>
-        <button
-          type="button"
           onClick={onClose}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
         >
           取消
         </button>
         <button
-          type="button"
-          onClick={handleSave}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          type="submit"
+          disabled={isLoading}
+          className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          保存
+          {isLoading ? '保存中...' : '保存'}
         </button>
       </div>
-    </div>
+    </form>
   );
 } 

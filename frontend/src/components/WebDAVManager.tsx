@@ -89,6 +89,10 @@ export function WebDAVManager({
     }
   };
 
+  const handleConfigClose = () => {
+    setIsConfigOpen(false);
+  };
+
   if (!config && !isConfigOpen) {
     return (
       <div className="space-y-4">
@@ -105,11 +109,11 @@ export function WebDAVManager({
         </button>
         <Modal
           isOpen={isConfigOpen}
-          onClose={() => setIsConfigOpen(false)}
+          onClose={handleConfigClose}
           title="WebDAV 配置"
         >
           <WebDAVConfig
-            onClose={() => setIsConfigOpen(false)}
+            onClose={handleConfigClose}
             onSave={handleConfigSave}
           />
         </Modal>
@@ -174,11 +178,11 @@ export function WebDAVManager({
 
       <Modal
         isOpen={isConfigOpen}
-        onClose={() => setIsConfigOpen(false)}
+        onClose={handleConfigClose}
         title="WebDAV 配置"
       >
         <WebDAVConfig
-          onClose={() => setIsConfigOpen(false)}
+          onClose={handleConfigClose}
           onSave={handleConfigSave}
         />
       </Modal>

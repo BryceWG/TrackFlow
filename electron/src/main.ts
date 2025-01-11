@@ -18,6 +18,12 @@ function createWindow() {
 
   // 开发环境下加载本地服务
   if (process.env.NODE_ENV === 'development') {
+    // 在开发环境下清除缓存
+    mainWindow.webContents.session.clearCache();
+    mainWindow.webContents.session.clearStorageData({
+      storages: ['filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+    });
+    
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {

@@ -30,6 +30,8 @@ interface Project {
   color: string;
   emoji: string;
   userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Entry {
@@ -39,6 +41,8 @@ interface Entry {
   projectId: string;
   timestamp: string;
   userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface DateRange {
@@ -158,10 +162,13 @@ function App() {
 
   const handleCreateProject = (projectData: { name: string; description: string; color: string; emoji: string }) => {
     try {
+      const now = new Date().toISOString();
       const newProject = {
         id: Date.now().toString(),
         order: projects.length,
         userId: currentUser!.id,
+        createdAt: now,
+        updatedAt: now,
         ...projectData,
       };
       setProjects([...projects, newProject]);
@@ -174,10 +181,13 @@ function App() {
 
   const handleCreateEntry = (entryData: { title: string; content: string; projectId: string; timestamp: string }) => {
     try {
+      const now = new Date().toISOString();
       const newEntry = {
         id: Date.now().toString(),
         ...entryData,
         userId: currentUser!.id,
+        createdAt: now,
+        updatedAt: now,
       };
       setEntries([...entries, newEntry]);
       setIsEntryModalOpen(false);
@@ -195,9 +205,10 @@ function App() {
   const handleUpdateEntry = (entryData: { title: string; content: string; projectId: string; timestamp: string }) => {
     try {
       if (!editingEntry) return;
+      const now = new Date().toISOString();
       const updatedEntries = entries.map(entry => 
         entry.id === editingEntry.id 
-          ? { ...entry, ...entryData }
+          ? { ...entry, ...entryData, updatedAt: now }
           : entry
       );
       setEntries(updatedEntries);

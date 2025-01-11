@@ -1,47 +1,91 @@
 import { useState } from 'react';
 
+const EMOJI_OPTIONS = [
+  { emoji: '📝', label: '笔记' },
+  { emoji: '💻', label: '编程' },
+  { emoji: '📚', label: '学习' },
+  { emoji: '🎯', label: '目标' },
+  { emoji: '🎨', label: '设计' },
+  { emoji: '🎮', label: '游戏' },
+  { emoji: '🏃', label: '运动' },
+  { emoji: '🎵', label: '音乐' },
+  { emoji: '🎬', label: '视频' },
+  { emoji: '📷', label: '摄影' },
+  { emoji: '🍳', label: '烹饪' },
+  { emoji: '🛠️', label: '工具' },
+];
+
+const COLOR_OPTIONS = [
+  {
+    bg: 'bg-blue-50',
+    hover: 'hover:bg-blue-100',
+    tag: 'bg-blue-100',
+    icon: 'text-blue-600',
+    border: 'border-blue-200',
+    label: '蓝色'
+  },
+  {
+    bg: 'bg-green-50',
+    hover: 'hover:bg-green-100',
+    tag: 'bg-green-100',
+    icon: 'text-green-600',
+    border: 'border-green-200',
+    label: '绿色'
+  },
+  {
+    bg: 'bg-yellow-50',
+    hover: 'hover:bg-yellow-100',
+    tag: 'bg-yellow-100',
+    icon: 'text-yellow-600',
+    border: 'border-yellow-200',
+    label: '黄色'
+  },
+  {
+    bg: 'bg-red-50',
+    hover: 'hover:bg-red-100',
+    tag: 'bg-red-100',
+    icon: 'text-red-600',
+    border: 'border-red-200',
+    label: '红色'
+  },
+  {
+    bg: 'bg-purple-50',
+    hover: 'hover:bg-purple-100',
+    tag: 'bg-purple-100',
+    icon: 'text-purple-600',
+    border: 'border-purple-200',
+    label: '紫色'
+  },
+  {
+    bg: 'bg-pink-50',
+    hover: 'hover:bg-pink-100',
+    tag: 'bg-pink-100',
+    icon: 'text-pink-600',
+    border: 'border-pink-200',
+    label: '粉色'
+  },
+];
+
 interface ProjectFormProps {
-  onSubmit: (project: { name: string; description: string; color: string; emoji: string }) => void;
+  onSubmit: (data: { name: string; description: string; color: string; emoji: string }) => void;
   onCancel: () => void;
 }
-
-// 预设的柔和颜色
-const COLOR_OPTIONS = [
-  { bg: 'bg-blue-50', hover: 'hover:bg-blue-100', tag: 'bg-blue-100', icon: 'text-blue-600', border: 'border-blue-200' },
-  { bg: 'bg-green-50', hover: 'hover:bg-green-100', tag: 'bg-green-100', icon: 'text-green-600', border: 'border-green-200' },
-  { bg: 'bg-purple-50', hover: 'hover:bg-purple-100', tag: 'bg-purple-100', icon: 'text-purple-600', border: 'border-purple-200' },
-  { bg: 'bg-pink-50', hover: 'hover:bg-pink-100', tag: 'bg-pink-100', icon: 'text-pink-600', border: 'border-pink-200' },
-  { bg: 'bg-yellow-50', hover: 'hover:bg-yellow-100', tag: 'bg-yellow-100', icon: 'text-yellow-600', border: 'border-yellow-200' },
-  { bg: 'bg-indigo-50', hover: 'hover:bg-indigo-100', tag: 'bg-indigo-100', icon: 'text-indigo-600', border: 'border-indigo-200' },
-  { bg: 'bg-red-50', hover: 'hover:bg-red-100', tag: 'bg-red-100', icon: 'text-red-600', border: 'border-red-200' },
-  { bg: 'bg-orange-50', hover: 'hover:bg-orange-100', tag: 'bg-orange-100', icon: 'text-orange-600', border: 'border-orange-200' },
-];
-
-// 预设的emoji列表
-const EMOJI_OPTIONS = [
-  '📝', '📚', '💻', '🎨', '🎮', '🎵', '📷', '🎬',
-  '🏃', '🍳', '🌱', '🔧', '📊', '🎯', '💡', '🌈',
-  '🚀', '⭐', '🎪', '🎸', '🎨', '📱', '🏠', '🌍'
-];
 
 export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
-  const [selectedEmoji, setSelectedEmoji] = useState(EMOJI_OPTIONS[0]);
+  const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0]);
+  const [selectedEmoji, setSelectedEmoji] = useState(EMOJI_OPTIONS[0].emoji);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    const color = COLOR_OPTIONS[selectedColorIndex];
-    onSubmit({ 
-      name, 
+    onSubmit({
+      name,
       description,
-      color: JSON.stringify(color),
-      emoji: selectedEmoji
+      color: JSON.stringify(selectedColor),
+      emoji: selectedEmoji,
     });
-    setName('');
-    setDescription('');
   };
 
   return (
@@ -56,7 +100,6 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          placeholder="请输入项目名称"
           required
         />
       </div>
@@ -71,69 +114,63 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          placeholder="请输入项目描述（选填）"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700">
           项目图标
         </label>
-        <div className="grid grid-cols-8 gap-2">
-          {EMOJI_OPTIONS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              className={`
-                w-8 h-8 flex items-center justify-center rounded-lg border-2 transition-all duration-150 text-lg
-                ${selectedEmoji === emoji 
-                  ? 'border-blue-500 scale-110 bg-blue-50' 
-                  : 'border-transparent hover:scale-105 hover:bg-gray-100'
-                }
-              `}
-              onClick={() => setSelectedEmoji(emoji)}
-            >
-              {emoji}
-            </button>
-          ))}
+        <div className="mt-1 relative">
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <span className="text-xl mr-2">{selectedEmoji}</span>
+            <span>选择图标</span>
+          </button>
+          {showEmojiPicker && (
+            <div className="absolute z-10 mt-1 w-60 bg-white rounded-md shadow-lg">
+              <div className="p-2 grid grid-cols-6 gap-1">
+                {EMOJI_OPTIONS.map((option, index) => (
+                  <button
+                    key={`${option.emoji}-${index}`}
+                    type="button"
+                    onClick={() => {
+                      setSelectedEmoji(option.emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                    className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100"
+                    title={option.label}
+                  >
+                    {option.emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700">
           项目颜色
         </label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="mt-1 grid grid-cols-6 gap-2">
           {COLOR_OPTIONS.map((color, index) => (
             <button
-              key={index}
+              key={`${color.label}-${index}`}
               type="button"
+              onClick={() => setSelectedColor(color)}
               className={`
-                w-12 h-12 rounded-lg border-2 transition-all duration-150
-                ${color.bg} ${color.hover}
-                ${selectedColorIndex === index 
-                  ? 'border-blue-500 scale-110' 
-                  : 'border-transparent hover:scale-105'
-                }
+                w-8 h-8 rounded-full border-2 transition-transform duration-200
+                ${color.bg}
+                ${selectedColor === color ? 'scale-110 ' + color.border : 'border-transparent'}
               `}
-              onClick={() => setSelectedColorIndex(index)}
+              title={color.label}
             />
           ))}
-        </div>
-        <div className="mt-2">
-          <div className={`
-            p-3 rounded-lg transition-colors duration-150 border-2
-            ${COLOR_OPTIONS[selectedColorIndex].bg}
-            ${COLOR_OPTIONS[selectedColorIndex].border}
-          `}>
-            <span className={`
-              inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
-              ${COLOR_OPTIONS[selectedColorIndex].tag}
-              ${COLOR_OPTIONS[selectedColorIndex].icon}
-            `}>
-              {selectedEmoji} 预览效果
-            </span>
-          </div>
         </div>
       </div>
 
@@ -147,7 +184,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
         </button>
         <button
           type="submit"
-          className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+          className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           创建
         </button>

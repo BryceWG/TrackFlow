@@ -14,6 +14,20 @@ interface BackupData {
   promptPresets: any[];
 }
 
+// 简单的加密函数
+function encrypt(text: string): string {
+  return btoa(text);
+}
+
+// 简单的解密函数
+function decrypt(text: string): string {
+  try {
+    return atob(text);
+  } catch {
+    return text; // 如果解密失败，返回原文（处理旧数据）
+  }
+}
+
 export function useWebDAV() {
   const [config, setConfig] = useLocalStorage<WebDAVConfig | null>('webdav-config', null);
   const [isConnected, setIsConnected] = useState(false);
@@ -21,9 +35,20 @@ export function useWebDAV() {
 
   const connect = async (newConfig: WebDAVConfig) => {
     try {
-      const result = await window.webdav.connect(newConfig);
+      // 先保存配置（加密密码）
+      const encryptedConfig = {
+        ...newConfig,
+        password: encrypt(newConfig.password)
+      };
+      setConfig(encryptedConfig);
+
+      // 使用解密后的密码进行连接测试
+      const result = await window.webdav.connect({
+        ...newConfig,
+        password: newConfig.password // 使用原始密码进行连接
+      });
+
       if (result.success) {
-        setConfig(newConfig);
         setIsConnected(true);
         setError(null);
         return true;
@@ -44,6 +69,12 @@ export function useWebDAV() {
     }
 
     try {
+      // 使用解密后的密码进行测试
+      const decryptedConfig = {
+        ...config,
+        password: decrypt(config.password)
+      };
+      
       const result = await window.webdav.test();
       setIsConnected(result.success);
       if (!result.success) {
@@ -123,8 +154,17 @@ export function useWebDAV() {
     }
   };
 
+  // 获取当前配置（解密密码）
+  const getDecryptedConfig = () => {
+    if (!config) return null;
+    return {
+      ...config,
+      password: decrypt(config.password)
+    };
+  };
+
   return {
-    config,
+    config: getDecryptedConfig(),
     isConnected,
     error,
     connect,
