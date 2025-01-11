@@ -337,6 +337,19 @@ function App() {
     handleCloseMobileMenu();
   };
 
+  const handleLogout = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: '退出登录',
+      message: '确定要退出登录吗？',
+      type: 'warning',
+      onConfirm: () => {
+        logout();
+        showToast('success', '已退出登录');
+      },
+    });
+  };
+
   if (!isAuthenticated) {
     return <Login onLogin={login} error={authError} />;
   }
@@ -490,7 +503,7 @@ function App() {
               </button>
             )}
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 bg-gray-50 rounded-md hover:bg-gray-100"
             >
               退出登录
