@@ -35,7 +35,7 @@ export function WebDAVManager({
   const [isLoading, setIsLoading] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [backupFiles, setBackupFiles] = useState<{ filename: string; lastmod: string }[]>([]);
+  const [backupFiles, setBackupFiles] = useState<{ filename: string; lastmod: string; path: string }[]>([]);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -57,7 +57,14 @@ export function WebDAVManager({
       if (result.success && result.data) {
         const files = result.data
           .filter((file: any) => file.filename.endsWith('.json'))
+          .map((file: any) => ({
+            filename: file.filename,
+            lastmod: file.lastmod,
+            // 确保路径以 / 开头，并且包含完整的目录结构
+            path: file.filename.startsWith('/') ? file.filename : `/trackflow/${file.filename}`
+          }))
           .sort((a: any, b: any) => b.lastmod.localeCompare(a.lastmod));
+        console.log('Backup files:', files); // 添加调试日志
         setBackupFiles(files);
       }
     } catch (err) {
@@ -96,20 +103,30 @@ export function WebDAVManager({
     }
   };
 
-  const handleRestore = async (filename: string) => {
+  const handleRestore = async (file: { filename: string; path: string }) => {
     setIsLoading(true);
     setMessage('');
 
     try {
-      const result = await window.webdav.download(`/trackflow/${filename}`);
+      console.log('Attempting to restore file:', file); // 添加调试日志
+      const result = await window.webdav.download(file.path);
+      console.log('Download result:', result); // 添加调试日志
+      
       if (result.success && result.data) {
-        const data = JSON.parse(result.data);
-        onRestore(data);
-        setMessage('恢复成功！');
+        try {
+          const data = JSON.parse(result.data);
+          onRestore(data);
+          setMessage('恢复成功！');
+        } catch (parseError) {
+          console.error('解析备份数据失败:', parseError); // 添加调试日志
+          setMessage('解析备份数据失败');
+        }
       } else {
+        console.error('下载失败:', result.error); // 添加调试日志
         setMessage(result.error || '恢复失败');
       }
     } catch (err) {
+      console.error('恢复失败:', err);
       setMessage(err instanceof Error ? err.message : '恢复失败');
     } finally {
       setIsLoading(false);
@@ -233,7 +250,7 @@ export function WebDAVManager({
                         title: '恢复数据',
                         message: '确定要恢复数据吗？当前的数据将被覆盖。',
                         type: 'warning' as const,
-                        onConfirm: () => handleRestore(file.filename),
+                        onConfirm: () => handleRestore(file),
                       });
                     }}
                     disabled={isLoading}
