@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { 
   PlusIcon, 
-  CalendarIcon, 
-  FolderIcon, 
   TrashIcon, 
   PencilIcon,
   Bars3Icon,
@@ -355,7 +353,7 @@ function App() {
   }
 
   if (isLoading) {
-    return (
+  return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
