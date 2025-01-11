@@ -150,11 +150,21 @@ export function WebDAVManager({
 
       <Modal
         isOpen={isConfigOpen}
-        onClose={() => config && setIsConfigOpen(false)}
+        onClose={() => {
+          if (config) {
+            setIsConfigOpen(false);
+            onClose();
+          }
+        }}
         title="WebDAV 配置"
       >
         <WebDAVConfig
-          onClose={() => config && setIsConfigOpen(false)}
+          onClose={() => {
+            if (config) {
+              setIsConfigOpen(false);
+              onClose();
+            }
+          }}
           onSave={handleConfigSave}
         />
       </Modal>

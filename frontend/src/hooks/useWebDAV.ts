@@ -92,7 +92,7 @@ export function useWebDAV() {
     try {
       // 获取备份目录下的所有文件
       const result = await window.webdav.list('/trackflow');
-      if (!result.success) {
+      if (!result.success || !result.data) {
         setError(result.error || '获取备份列表失败');
         return null;
       }
@@ -111,12 +111,12 @@ export function useWebDAV() {
       const latestBackup = backupFiles[0];
       const downloadResult = await window.webdav.download(`/trackflow/${latestBackup.filename}`);
       
-      if (!downloadResult.success) {
+      if (!downloadResult.success || !downloadResult.data) {
         setError(downloadResult.error || '下载备份失败');
         return null;
       }
 
-      return JSON.parse(downloadResult.data as string) as BackupData;
+      return JSON.parse(downloadResult.data) as BackupData;
     } catch (err) {
       setError(err instanceof Error ? err.message : '恢复失败');
       return null;

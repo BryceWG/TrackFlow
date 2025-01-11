@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { User, LoginCredentials } from '../types/user';
 import { useLocalStorage } from './useLocalStorage';
 

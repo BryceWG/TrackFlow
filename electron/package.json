@@ -4,7 +4,7 @@
   "description": "TrackFlow Desktop App",
   "main": "dist/main.js",
   "scripts": {
-    "start": "tsc && electron .",
+    "start": "cross-env NODE_ENV=development electron .",
     "build": "tsc",
     "watch": "tsc -w",
     "dev": "concurrently \"npm run watch\" \"npm run start\"",
@@ -31,13 +31,13 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.11.5",
-    "@types/webdav": "^4.2.2",
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "electron": "^28.1.4",
     "electron-builder": "^24.9.1",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "webdav": "^5.3.1"
+    "webdav": "^4.11.4"
   }
 }

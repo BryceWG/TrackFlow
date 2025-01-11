@@ -76,7 +76,6 @@ function App() {
     deleteUser,
   } = useAuth();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -145,7 +144,7 @@ function App() {
   useEffect(() => {
     const needsMigration = projects.some(project => !project.color);
     if (needsMigration) {
-      const migratedProjects = projects.map((project, index) => ({
+      const migratedProjects = projects.map(project => ({
         ...project,
         color: project.color || JSON.stringify(DEFAULT_COLOR)
       }));

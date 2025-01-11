@@ -1,10 +1,9 @@
 /// <reference types="electron" />
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron/main';
 import * as path from 'path';
-import { createClient, WebDAVClient } from 'webdav';
 
 let mainWindow: BrowserWindow | null = null;
-let webdavClient: WebDAVClient | null = null;
+let webdavClient: any = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -42,8 +41,9 @@ app.on('activate', () => {
 });
 
 // WebDAV 相关 IPC 处理
-ipcMain.handle('webdav-connect', async (_event, config: { url: string, username: string, password: string }) => {
+ipcMain.handle('webdav-connect', async (_event: IpcMainInvokeEvent, config: { url: string, username: string, password: string }) => {
   try {
+    const { createClient } = await import('webdav');
     webdavClient = createClient(config.url, {
       username: config.username,
       password: config.password
@@ -60,7 +60,7 @@ ipcMain.handle('webdav-connect', async (_event, config: { url: string, username:
   }
 });
 
-ipcMain.handle('webdav-test', async (_event) => {
+ipcMain.handle('webdav-test', async (_event: IpcMainInvokeEvent) => {
   if (!webdavClient) {
     return { success: false, error: '未连接到 WebDAV 服务器' };
   }
@@ -76,7 +76,7 @@ ipcMain.handle('webdav-test', async (_event) => {
   }
 });
 
-ipcMain.handle('webdav-upload', async (_event, { path, data }: { path: string, data: string }) => {
+ipcMain.handle('webdav-upload', async (_event: IpcMainInvokeEvent, { path, data }: { path: string, data: string }) => {
   if (!webdavClient) {
     return { success: false, error: '未连接到 WebDAV 服务器' };
   }
@@ -92,7 +92,7 @@ ipcMain.handle('webdav-upload', async (_event, { path, data }: { path: string, d
   }
 });
 
-ipcMain.handle('webdav-download', async (_event, path: string) => {
+ipcMain.handle('webdav-download', async (_event: IpcMainInvokeEvent, path: string) => {
   if (!webdavClient) {
     return { success: false, error: '未连接到 WebDAV 服务器' };
   }
@@ -108,7 +108,7 @@ ipcMain.handle('webdav-download', async (_event, path: string) => {
   }
 });
 
-ipcMain.handle('webdav-list', async (_event, path: string) => {
+ipcMain.handle('webdav-list', async (_event: IpcMainInvokeEvent, path: string) => {
   if (!webdavClient) {
     return { success: false, error: '未连接到 WebDAV 服务器' };
   }
