@@ -75,7 +75,6 @@ function App() {
     deleteUser,
   } = useAuth();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -112,7 +111,7 @@ function App() {
   const [isAIConfigOpen, setIsAIConfigOpen] = useState(false);
   const [isAIAnalysisOpen, setIsAIAnalysisOpen] = useState(false);
   const [isPromptPresetsOpen, setIsPromptPresetsOpen] = useState(false);
-  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [userManagementOpen, setUserManagementOpen] = useState(false);
   const [promptPresets, setPromptPresets] = useLocalStorage<Preset[]>('promptPresets', []);
 
   // 模拟加载效果
@@ -494,7 +493,7 @@ function App() {
             </button>
             {currentUser?.role === 'admin' && (
               <button
-                onClick={() => setIsUserManagementOpen(true)}
+                onClick={() => setUserManagementOpen(true)}
                 className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
               >
                 用户管理
@@ -750,8 +749,8 @@ function App() {
 
       {/* 用户管理弹窗 */}
       <Modal
-        isOpen={isUserManagementOpen}
-        onClose={() => setIsUserManagementOpen(false)}
+        isOpen={userManagementOpen}
+        onClose={() => setUserManagementOpen(false)}
         title="用户管理"
       >
         <UserManagement
@@ -789,7 +788,7 @@ function App() {
               },
             });
           }}
-          onClose={() => setIsUserManagementOpen(false)}
+          onClose={() => setUserManagementOpen(false)}
         />
       </Modal>
     </div>
