@@ -1,12 +1,43 @@
 {
-  "name": "electron",
+  "name": "trackflow",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "TrackFlow Desktop App",
+  "main": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsc && electron .",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "dev": "concurrently \"npm run watch\" \"npm run start\"",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
-  "keywords": [],
+  "build": {
+    "appId": "com.trackflow.app",
+    "productName": "TrackFlow",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@types/webdav": "^4.2.2",
+    "concurrently": "^8.2.2",
+    "electron": "^28.1.4",
+    "electron-builder": "^24.9.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "webdav": "^5.3.1"
+  }
 }

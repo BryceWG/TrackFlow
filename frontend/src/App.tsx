@@ -20,6 +20,7 @@ import { PromptPresets, Preset } from './components/PromptPresets'
 import { Login } from './components/Login'
 import { UserManagement } from './components/UserManagement'
 import { useAuth } from './hooks/useAuth'
+import { WebDAVManager } from './components/WebDAVManager'
 
 interface Project {
   id: string;
@@ -114,6 +115,7 @@ function App() {
   const [isPromptPresetsOpen, setIsPromptPresetsOpen] = useState(false);
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
   const [promptPresets, setPromptPresets] = useLocalStorage<Preset[]>('promptPresets', []);
+  const [isWebDAVOpen, setIsWebDAVOpen] = useState(false);
 
   // 模拟加载效果
   useEffect(() => {
@@ -492,6 +494,12 @@ function App() {
             >
               提示词预设
             </button>
+            <button
+              onClick={() => setIsWebDAVOpen(true)}
+              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+            >
+              数据管理
+            </button>
             {currentUser?.role === 'admin' && (
               <button
                 onClick={() => setIsUserManagementOpen(true)}
@@ -790,6 +798,36 @@ function App() {
             });
           }}
           onClose={() => setIsUserManagementOpen(false)}
+        />
+      </Modal>
+
+      {/* WebDAV 管理弹窗 */}
+      <Modal
+        isOpen={isWebDAVOpen}
+        onClose={() => setIsWebDAVOpen(false)}
+        title="数据管理"
+      >
+        <WebDAVManager
+          projects={projects}
+          entries={entries}
+          users={users}
+          promptPresets={promptPresets}
+          onRestore={(data) => {
+            setConfirmDialog({
+              isOpen: true,
+              title: '恢复数据',
+              message: '确定要恢复数据吗？当前的数据将被覆盖。',
+              type: 'warning',
+              onConfirm: () => {
+                setProjects(data.projects);
+                setEntries(data.entries);
+                setPromptPresets(data.promptPresets);
+                showToast('success', '数据恢复成功');
+                setIsWebDAVOpen(false);
+              },
+            });
+          }}
+          onClose={() => setIsWebDAVOpen(false)}
         />
       </Modal>
     </div>
