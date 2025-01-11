@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 import { WebDAVConfig } from './WebDAVConfig';
 import { useWebDAV } from '../hooks/useWebDAV';
 import { Modal } from './Modal';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface WebDAVManagerProps {
   projects: any[];
@@ -34,6 +35,42 @@ export function WebDAVManager({
   const [isLoading, setIsLoading] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [backupFiles, setBackupFiles] = useState<{ filename: string; lastmod: string }[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'warning' | 'info';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'warning',
+    onConfirm: () => {},
+  });
+
+  // 获取备份文件列表
+  const fetchBackupFiles = async () => {
+    try {
+      const result = await window.webdav.list('/trackflow');
+      if (result.success && result.data) {
+        const files = result.data
+          .filter((file: any) => file.filename.endsWith('.json'))
+          .sort((a: any, b: any) => b.lastmod.localeCompare(a.lastmod));
+        setBackupFiles(files);
+      }
+    } catch (err) {
+      console.error('获取备份文件列表失败:', err);
+    }
+  };
+
+  // 当配置存在时，自动获取备份文件列表
+  useEffect(() => {
+    if (config) {
+      fetchBackupFiles();
+    }
+  }, [config]);
 
   const handleBackup = async () => {
     setIsLoading(true);
@@ -49,6 +86,8 @@ export function WebDAVManager({
 
       if (success) {
         setMessage('备份成功！');
+        // 刷新备份文件列表
+        await fetchBackupFiles();
       }
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '备份失败');
@@ -57,15 +96,18 @@ export function WebDAVManager({
     }
   };
 
-  const handleRestore = async () => {
+  const handleRestore = async (filename: string) => {
     setIsLoading(true);
     setMessage('');
 
     try {
-      const data = await getLatestBackup();
-      if (data) {
+      const result = await window.webdav.download(`/trackflow/${filename}`);
+      if (result.success && result.data) {
+        const data = JSON.parse(result.data);
         onRestore(data);
         setMessage('恢复成功！');
+      } else {
+        setMessage(result.error || '恢复失败');
       }
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '恢复失败');
@@ -83,6 +125,7 @@ export function WebDAVManager({
       if (success) {
         setIsConfigOpen(false);
         setMessage('连接成功！');
+        await fetchBackupFiles();
       }
     } finally {
       setIsLoading(false);
@@ -149,7 +192,6 @@ export function WebDAVManager({
           <button
             type="button"
             onClick={testConnection}
-            disabled={isLoading}
             className="text-sm text-blue-600 hover:text-blue-700"
           >
             测试连接
@@ -160,19 +202,53 @@ export function WebDAVManager({
           <button
             type="button"
             onClick={handleBackup}
-            disabled={isLoading || !isConnected}
+            disabled={isLoading}
             className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
             {isLoading ? <LoadingSpinner size="sm" /> : '备份数据'}
           </button>
-          <button
-            type="button"
-            onClick={handleRestore}
-            disabled={isLoading || !isConnected}
-            className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-          >
-            {isLoading ? <LoadingSpinner size="sm" /> : '恢复数据'}
-          </button>
+        </div>
+
+        {/* 备份文件列表 */}
+        <div className="mt-4">
+          <h4 className="text-sm font-medium text-gray-900 mb-2">备份文件列表</h4>
+          {backupFiles.length > 0 ? (
+            <div className="space-y-2">
+              {backupFiles.map((file) => (
+                <div
+                  key={file.filename}
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
+                >
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900">{file.filename}</div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(file.lastmod).toLocaleString('zh-CN')}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmDialog({
+                        isOpen: true,
+                        title: '恢复数据',
+                        message: '确定要恢复数据吗？当前的数据将被覆盖。',
+                        type: 'warning' as const,
+                        onConfirm: () => handleRestore(file.filename),
+                      });
+                    }}
+                    disabled={isLoading}
+                    className="ml-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                  >
+                    恢复此备份
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500 text-center py-4">
+              暂无备份文件
+            </div>
+          )}
         </div>
       </div>
 
@@ -186,6 +262,19 @@ export function WebDAVManager({
           onSave={handleConfigSave}
         />
       </Modal>
+
+      {/* 确认对话框 */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={() => {
+          confirmDialog.onConfirm();
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        }}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+      />
     </div>
   );
 } 
