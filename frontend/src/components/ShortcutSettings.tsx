@@ -23,8 +23,8 @@ export const ShortcutSettings: React.FC = () => {
     }
   };
 
-  const handleKeyUp = (id: string) => {
-    if (!recording) return;
+  const handleKeyUp = () => {
+    if (!recording || !editingId) return;
 
     const shortcutStr = tempKeys
       .filter(k => k !== 'CONTROL' && k !== 'META' && k !== 'ALT' && k !== 'SHIFT')
@@ -37,7 +37,7 @@ export const ShortcutSettings: React.FC = () => {
 
     const finalShortcut = [...modifiers, shortcutStr].join('+');
     
-    updateShortcut(id, finalShortcut);
+    updateShortcut(editingId, finalShortcut);
     setRecording(false);
     setTempKeys([]);
     setEditingId(null);
@@ -72,7 +72,7 @@ export const ShortcutSettings: React.FC = () => {
                     }`}
                     onClick={() => startRecording(shortcut.id)}
                     onKeyDown={e => handleKeyDown(e, shortcut.id)}
-      onKeyUp={() => handleKeyUp(shortcut.id)}
+                    onKeyUp={handleKeyUp}
                   >
                     {editingId === shortcut.id ? (
                       <span className="text-blue-600">按下快捷键...</span>
