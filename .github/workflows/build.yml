@@ -48,7 +48,7 @@ jobs:
 
       - name: Build/Release Electron app
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEBUG: electron-builder
         run: |
           cd electron
