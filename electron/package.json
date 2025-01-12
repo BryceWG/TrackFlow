@@ -54,14 +54,18 @@
     "linux": {
       "target": ["AppImage", "deb", "rpm"],
       "icon": "../icon_512.png",
-      "category": "Utility"
+      "category": "Utility",
+      "cleanup": true
     },
     "publish": {
       "provider": "github",
       "releaseType": "release"
     }
   },
-  "author": "",
+  "author": {
+    "name": "BryceWG",
+    "email": "brycewg@hnu.edu.cn"
+  },
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.11.5",
