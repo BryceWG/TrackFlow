@@ -5,7 +5,11 @@
   "main": "dist/main.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/TrackFlow.git"
+    "url": "git+https://github.com/BryceWG/TrackFlow.git"
+  },
+  "homepage": "https://github.com/BryceWG/TrackFlow",
+  "bugs": {
+    "url": "https://github.com/BryceWG/TrackFlow/issues"
   },
   "scripts": {
     "start": "cross-env NODE_ENV=development electron .",
