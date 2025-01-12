@@ -21,6 +21,12 @@
       "dist/**/*",
       "node_modules/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "../frontend/dist",
+        "to": "frontend/dist"
+      }
+    ],
     "win": {
       "target": [
         "nsis"

@@ -43,10 +43,7 @@ export function useWebDAV() {
       setConfig(encryptedConfig);
 
       // 使用解密后的密码进行连接测试
-      const result = await window.webdav.connect({
-        ...newConfig,
-        password: newConfig.password // 使用原始密码进行连接
-      });
+      const result = await window.webdav.connect(newConfig);
 
       if (result.success) {
         setIsConnected(true);
@@ -70,11 +67,6 @@ export function useWebDAV() {
 
     try {
       // 使用解密后的密码进行测试
-      const decryptedConfig = {
-        ...config,
-        password: decrypt(config.password)
-      };
-      
       const result = await window.webdav.test();
       setIsConnected(result.success);
       if (!result.success) {
@@ -99,10 +91,10 @@ export function useWebDAV() {
       const filename = `trackflow-backup-${timestamp}.json`;
       
       // 上传备份文件
-      const result = await window.webdav.upload(
-        `/trackflow/${filename}`,
-        JSON.stringify(data, null, 2)
-      );
+      const result = await window.webdav.upload({
+        path: `/trackflow/${filename}`,
+        data: JSON.stringify(data)
+      });
 
       if (!result.success) {
         setError(result.error || '备份失败');
@@ -172,4 +164,4 @@ export function useWebDAV() {
     backup,
     getLatestBackup,
   };
-} 
+}

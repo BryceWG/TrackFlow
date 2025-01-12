@@ -7,8 +7,8 @@ function encryptPassword(password: string): string {
   // 使用一个简单的 salt
   const salt = 'trackflow-salt';
   const textToChars = (text: string) => text.split('').map(c => c.charCodeAt(0));
-  const byteHex = (n: number) => ("0" + Number(n).toString(16)).substr(-2);
-  const applySaltToChar = (code: number) => textToChars(salt).reduce((a, b) => a ^ b, code);
+  const byteHex = (n: number[]) => n.map(num => ("0" + Number(num).toString(16)).substr(-2)).join('');
+  const applySaltToChar = (code: number[]) => code.map(c => textToChars(salt).reduce((a, b) => a ^ b, c));
 
   return password
     .split('')
@@ -32,11 +32,11 @@ function decryptPassword(encoded: string): string {
     .join('');
 }
 
-const INITIAL_ADMIN = {
+const INITIAL_ADMIN: User = {
   id: '1',
   username: 'admin',
   password: encryptPassword('admin123'),
-  role: 'admin' as const,
+  role: 'admin',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
@@ -131,4 +131,4 @@ export function useAuth() {
     updateUser,
     deleteUser,
   };
-} 
+}

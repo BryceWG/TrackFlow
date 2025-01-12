@@ -11,7 +11,7 @@ interface WebDAVManagerProps {
   users: any[];
   promptPresets: any[];
   onRestore: (data: { projects: any[]; entries: any[]; users: any[]; promptPresets: any[] }) => void;
-  onClose: () => void;
+  // onClose: () => void;
 }
 
 export function WebDAVManager({
@@ -20,7 +20,6 @@ export function WebDAVManager({
   users,
   promptPresets,
   onRestore,
-  onClose,
 }: WebDAVManagerProps) {
   const {
     config,
@@ -29,7 +28,7 @@ export function WebDAVManager({
     connect,
     testConnection,
     backup,
-    getLatestBackup,
+    // getLatestBackup,
   } = useWebDAV();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -557,4 +556,4 @@ export function WebDAVManager({
       />
     </div>
   );
-} 
+}
