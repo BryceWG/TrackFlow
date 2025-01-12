@@ -28,7 +28,17 @@ jobs:
         with:
           node-version: 18
 
-      - name: Clean install directories
+      - name: Clean install directories (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          if exist frontend\node_modules rmdir /s /q frontend\node_modules
+          if exist electron\node_modules rmdir /s /q electron\node_modules
+          if exist frontend\dist rmdir /s /q frontend\dist
+          if exist electron\dist rmdir /s /q electron\dist
+          if exist electron\release rmdir /s /q electron\release
+
+      - name: Clean install directories (Unix)
+        if: matrix.os != 'windows-latest'
         run: |
           rm -rf frontend/node_modules electron/node_modules frontend/dist electron/dist electron/release || true
           
