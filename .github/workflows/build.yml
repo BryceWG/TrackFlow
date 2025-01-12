@@ -48,7 +48,7 @@ jobs:
 
       - name: Build/Release Electron app
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           DEBUG: electron-builder
         run: |
           cd electron
@@ -65,4 +65,4 @@ jobs:
             electron/release/*.AppImage
             electron/release/*.snap
             electron/release/*.deb
-            electron/release/*.rpm 
+            electron/release/*.rpm
