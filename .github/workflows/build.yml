@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   release:
     runs-on: ${{ matrix.os }}
@@ -24,6 +28,10 @@ jobs:
         with:
           node-version: 18
 
+      - name: Clean install directories
+        run: |
+          rm -rf frontend/node_modules electron/node_modules frontend/dist electron/dist electron/release || true
+          
       - name: Install Frontend Dependencies
         run: |
           cd frontend
@@ -45,6 +53,16 @@ jobs:
           git status
           echo "Repository info:"
           git remote -v
+          echo "Node version:"
+          node --version
+          echo "NPM version:"
+          npm --version
+
+      - name: Install Linux Dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
 
       - name: Build/Release Electron app
         env:
@@ -65,4 +83,4 @@ jobs:
             electron/release/*.AppImage
             electron/release/*.snap
             electron/release/*.deb
-            electron/release/*.rpm 
+            electron/release/*.rpm

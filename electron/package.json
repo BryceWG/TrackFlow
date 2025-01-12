@@ -5,7 +5,11 @@
   "main": "dist/main.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/TrackFlow.git"
+    "url": "git+https://github.com/BryceWG/TrackFlow.git"
+  },
+  "author": {
+    "name": "BryceWG",
+    "email": "brycewg@hnu.edu.cn"
   },
   "scripts": {
     "start": "cross-env NODE_ENV=development electron .",
@@ -54,15 +58,20 @@
     "linux": {
       "target": ["AppImage", "deb", "rpm"],
       "icon": "../icon_512.png",
-      "category": "Utility"
+      "category": "Utility",
+      "artifactName": "${productName}-${version}.${ext}"
     },
     "publish": {
       "provider": "github",
-      "releaseType": "release"
+      "releaseType": "release",
+      "private": false
     }
   },
-  "author": "",
   "license": "ISC",
+  "homepage": "https://github.com/BryceWG/TrackFlow#readme",
+  "bugs": {
+    "url": "https://github.com/BryceWG/TrackFlow/issues"
+  },
   "devDependencies": {
     "@types/node": "^20.11.5",
     "concurrently": "^8.2.2",
