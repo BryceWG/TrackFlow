@@ -1,14 +1,13 @@
-interface Window {
-  webdav: {
-    connect: (config: { url: string; username: string; password: string }) => Promise<{ success: boolean; error?: string }>;
-    test: () => Promise<{ success: boolean; error?: string }>;
-    upload: (params: { path: string; data: string }) => Promise<{ success: boolean; error?: string }>;
-    download: (path: string) => Promise<{ success: boolean; data?: string; error?: string }>;
-    list: (path: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
-    delete: (path: string) => Promise<{ success: boolean; error?: string }>;
-  };
-  fileOps: {
-    saveJsonFile: (data: string) => Promise<{ success: boolean; error?: string }>;
-    loadJsonFile: () => Promise<{ success: boolean; data?: string; error?: string }>;
-  };
+export interface IpcRenderer {
+  send(channel: string, ...args: any[]): void;
+  on(channel: string, listener: (event: any, ...args: any[]) => void): void;
+  removeListener(channel: string, listener: (event: any, ...args: any[]) => void): void;
+}
+
+declare global {
+  interface Window {
+    electron?: {
+      ipcRenderer: IpcRenderer;
+    };
+  }
 } 

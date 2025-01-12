@@ -21,6 +21,7 @@ import { Login } from './components/Login'
 import { UserManagement } from './components/UserManagement'
 import { useAuth } from './hooks/useAuth'
 import { WebDAVManager } from './components/WebDAVManager'
+import { ShortcutSettings } from './components/ShortcutSettings'
 
 interface Project {
   id: string;
@@ -524,6 +525,10 @@ function App() {
             >
               退出登录
             </button>
+          </div>
+
+          <div className="border-t">
+            <ShortcutSettings />
           </div>
         </div>
       </aside>

@@ -64,6 +64,7 @@ function createWindow() {
         // 生产环境下加载打包后的文件
         mainWindow.loadFile(path.join(__dirname, '../../frontend/dist/index.html'));
     }
+    registerShortcuts(mainWindow);
 }
 main_1.app.whenReady().then(createWindow);
 main_1.app.on('window-all-closed', () => {
@@ -244,3 +245,27 @@ main_1.ipcMain.handle('webdav-delete', async (_event, path) => {
         };
     }
 });
+// 注册快捷键
+function registerShortcuts(mainWindow) {
+    // 从渲染进程接收快捷键更新
+    main_1.ipcMain.on('UPDATE_SHORTCUTS', (event, shortcuts) => {
+        // 先注销所有快捷键
+        main_1.globalShortcut.unregisterAll();
+        // 重新注册快捷键
+        Object.values(shortcuts).forEach((shortcut) => {
+            const key = shortcut.customKey || shortcut.defaultKey;
+            try {
+                main_1.globalShortcut.register(key, () => {
+                    mainWindow.webContents.send('SHORTCUT_TRIGGERED', shortcut.id);
+                });
+            }
+            catch (error) {
+                console.error(`Failed to register shortcut: ${key}`, error);
+            }
+        });
+    });
+    // 应用退出时注销所有快捷键
+    main_1.app.on('will-quit', () => {
+        main_1.globalShortcut.unregisterAll();
+    });
+}

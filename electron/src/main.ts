@@ -1,6 +1,7 @@
 /// <reference types="electron" />
-import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron/main';
+import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent, globalShortcut } from 'electron/main';
 import * as path from 'path';
+import { ShortcutMap, Shortcut } from './types/shortcuts';
 
 let mainWindow: BrowserWindow | null = null;
 let webdavClient: any = null;
@@ -32,6 +33,8 @@ function createWindow() {
     // 生产环境下加载打包后的文件
     mainWindow.loadFile(path.join(__dirname, '../../frontend/dist/index.html'));
   }
+
+  registerShortcuts(mainWindow);
 }
 
 app.whenReady().then(createWindow);
@@ -223,3 +226,29 @@ ipcMain.handle('webdav-delete', async (_event: IpcMainInvokeEvent, path: string)
     };
   }
 });
+
+// 注册快捷键
+function registerShortcuts(mainWindow: BrowserWindow) {
+  // 从渲染进程接收快捷键更新
+  ipcMain.on('UPDATE_SHORTCUTS', (event, shortcuts: ShortcutMap) => {
+    // 先注销所有快捷键
+    globalShortcut.unregisterAll();
+
+    // 重新注册快捷键
+    Object.values(shortcuts).forEach((shortcut: Shortcut) => {
+      const key = shortcut.customKey || shortcut.defaultKey;
+      try {
+        globalShortcut.register(key, () => {
+          mainWindow.webContents.send('SHORTCUT_TRIGGERED', shortcut.id);
+        });
+      } catch (error) {
+        console.error(`Failed to register shortcut: ${key}`, error);
+      }
+    });
+  });
+
+  // 应用退出时注销所有快捷键
+  app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
+  });
+}
