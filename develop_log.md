@@ -216,6 +216,25 @@
        - 增加构建调试信息
        - 改进Git仓库检出深度
        - 启用electron-builder调试模式
+     - 修复GitHub Actions构建错误
+       - 添加permissions配置
+       - 优化release发布流程
+       - 添加macOS entitlements配置
+       - 修复认证问题
+       - 简化工作流配置
+     - 配置GitHub Actions Token
+       - 生成Personal Access Token
+       - 添加仓库Secrets配置
+       - 更新工作流使用自定义token
+       - 增加token权限范围
+       - 优化发布流程安全性
+
+4. AI搜索
+   - 添加AI搜索功能
+   - 支持全文搜索
+   - 支持按项目搜索
+   - 支持按时间范围搜索
+   - 支持按关键词搜索
 
 ## 下一步开发计划
 1. AI搜索

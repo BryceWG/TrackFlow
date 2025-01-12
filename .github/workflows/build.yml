@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ${{ matrix.os }}
@@ -24,6 +27,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
       - name: Install Frontend Dependencies
         run: |
@@ -38,15 +42,6 @@ jobs:
           cd frontend
           npm run build
 
-      - name: Debug Info
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Git status:"
-          git status
-          echo "Repository info:"
-          git remote -v
-
       - name: Build/Release Electron app
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
@@ -56,14 +51,18 @@ jobs:
           npm run build
           npm run dist
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{ matrix.os }}-artifacts
-          path: |
+          draft: false
+          prerelease: false
+          files: |
             electron/release/*.exe
             electron/release/*.dmg
             electron/release/*.AppImage
             electron/release/*.snap
             electron/release/*.deb
             electron/release/*.rpm
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
