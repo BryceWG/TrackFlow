@@ -200,16 +200,17 @@
    - 添加数据缓存机制
 
 3. Windows Electron 桌面应用实现
-   - 配置 electron-builder
-     - 设置应用信息（appId, productName等）
-     - 配置 Windows 安装包选项
-     - 添加应用图标支持
-     - 配置安装程序选项（NSIS）
-   - 添加打包命令
-     - `npm run pack`: 打包为免安装版
-     - `npm run dist`: 生成安装包
+   - 执行前端构建命令：cd frontend; npm run build
+   - 执行Electron打包命令：cd ../electron; npm run dist
+   - 生成Windows安装包：TrackFlow Setup 1.0.0.exe
    - 安装包功能
      - 支持自定义安装目录
      - 创建桌面快捷方式
      - 创建开始菜单快捷方式
      - 支持卸载程序
+4. AI搜索
+   - 添加AI搜索功能
+   - 支持全文搜索
+   - 支持按项目搜索
+   - 支持按时间范围搜索
+   - 支持按关键词搜索
