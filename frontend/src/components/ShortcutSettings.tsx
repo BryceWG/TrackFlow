@@ -7,7 +7,7 @@ export const ShortcutSettings: React.FC = () => {
   const [recording, setRecording] = useState(false);
   const [tempKeys, setTempKeys] = useState<string[]>([]);
 
-  const handleKeyDown = (e: React.KeyboardEvent, id: string) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     e.preventDefault();
     if (!recording) return;
 
@@ -71,7 +71,7 @@ export const ShortcutSettings: React.FC = () => {
                         : 'hover:bg-gray-50'
                     }`}
                     onClick={() => startRecording(shortcut.id)}
-                    onKeyDown={e => handleKeyDown(e, shortcut.id)}
+                    onKeyDown={handleKeyDown}
       onKeyUp={() => handleKeyUp(shortcut.id)}
                   >
                     {editingId === shortcut.id ? (
