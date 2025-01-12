@@ -26,6 +26,12 @@
         "filter": ["**/*"]
       }
     ],
+    "extraResources": [
+      {
+        "from": "../frontend/dist",
+        "to": "frontend/dist"
+      }
+    ],
     "win": {
       "target": [
         {

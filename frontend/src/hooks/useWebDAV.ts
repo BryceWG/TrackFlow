@@ -14,7 +14,16 @@ export function useWebDAV() {
   const connect = async (newConfig: WebDAVConfig) => {
     setError('');
     try {
+      // 先保存配置（加密密码）
+      const encryptedConfig = {
+        ...newConfig,
+        password: encrypt(newConfig.password)
+      };
+      setConfig(encryptedConfig);
+
+      // 使用解密后的密码进行连接测试
       const result = await window.webdav.connect(newConfig);
+
       if (result.success) {
         setConfig(newConfig);
         setIsConnected(true);
@@ -32,6 +41,7 @@ export function useWebDAV() {
   const testConnection = async () => {
     setError('');
     try {
+      // 使用解密后的密码进行测试
       const result = await window.webdav.test();
       if (result.success) {
         setIsConnected(true);
@@ -53,9 +63,16 @@ export function useWebDAV() {
       throw new Error('未配置 WebDAV');
     }
 
-    const filename = `trackflow-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    const path = `/trackflow/${filename}`;
-    const jsonData = JSON.stringify(data);
+    try {
+      // 创建带时间戳的备份文件名
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `trackflow-backup-${timestamp}.json`;
+      
+      // 上传备份文件
+      const result = await window.webdav.upload({
+        path: `/trackflow/${filename}`,
+        data: JSON.stringify(data)
+      });
 
     const result = await window.webdav.upload({ path, data: jsonData });
     if (!result.success) {
@@ -73,4 +90,4 @@ export function useWebDAV() {
     testConnection,
     backup,
   };
-} 
+}

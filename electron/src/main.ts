@@ -233,4 +233,4 @@ ipcMain.handle('webdav-delete', async (_event: IpcMainInvokeEvent, path: string)
       error: error instanceof Error ? error.message : '删除文件失败' 
     };
   }
-}); 
+});

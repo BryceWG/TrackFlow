@@ -837,7 +837,6 @@ function App() {
               },
             });
           }}
-          onClose={() => setIsWebDAVOpen(false)}
         />
       </Modal>
     </div>

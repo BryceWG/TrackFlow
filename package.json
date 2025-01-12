@@ -1,8 +1,44 @@
 {
-  "devDependencies": {
-    "@tailwindcss/forms": "^0.5.10"
+  "name": "trackflow",
+  "version": "0.1.0",
+  "main": "electron/dist/main.js", 
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:build": "electron-builder",
+    "electron:start": "electron ."
   },
   "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "webdav": "^5.7.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^28.3.3",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
+  },
+  "build": {
+    "appId": "com.trackflow.app",
+    "productName": "TrackFlow",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "frontend/public/icons/icon-512x512.png"
+    }
   }
 }

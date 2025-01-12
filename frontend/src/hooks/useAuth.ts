@@ -5,9 +5,9 @@ import { useLocalStorage } from './useLocalStorage';
 // 使用更安全的加密方法
 function applySaltToChar(code: number): number {
   const salt = 'trackflow-salt';
-  const saltSum = Array.from(salt).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return code + saltSum;
-}
+  const textToChars = (text: string) => text.split('').map(c => c.charCodeAt(0));
+  const byteHex = (n: number[]) => n.map(num => ("0" + Number(num).toString(16)).substr(-2)).join('');
+  const applySaltToChar = (code: number[]) => code.map(c => textToChars(salt).reduce((a, b) => a ^ b, c));
 
 function encryptPassword(password: string): string {
   return Array.from(password)
@@ -30,11 +30,11 @@ function decryptPassword(encoded: string): string {
     .join('');
 }
 
-const INITIAL_ADMIN = {
+const INITIAL_ADMIN: User = {
   id: '1',
   username: 'admin',
   password: encryptPassword('admin123'),
-  role: 'admin' as const,
+  role: 'admin',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
@@ -129,4 +129,4 @@ export function useAuth() {
     updateUser,
     deleteUser,
   };
-} 
+}
