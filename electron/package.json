@@ -30,7 +30,17 @@
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "../icon_512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TrackFlow",
+      "uninstallDisplayName": "TrackFlow",
+      "artifactName": "TrackFlow Setup ${version}.${ext}"
     }
   },
   "author": "",
