@@ -22,10 +22,11 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install Dependencies
+      - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm install
+          npm install @tailwindcss/forms
           cd ../electron
           npm install
 
