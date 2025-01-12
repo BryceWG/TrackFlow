@@ -50,39 +50,54 @@ export const ShortcutSettings: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-lg font-semibold mb-4">快捷键设置</h2>
-      <div className="space-y-4">
-        {Object.values(shortcuts).map(shortcut => (
-          <div key={shortcut.id} className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">{shortcut.name}</div>
-              <div className="text-sm text-gray-500">{shortcut.description}</div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                className={`px-3 py-1 border rounded ${
-                  editingId === shortcut.id
-                    ? 'bg-blue-100 border-blue-300'
-                    : 'hover:bg-gray-100'
-                }`}
-                onClick={() => startRecording(shortcut.id)}
-                onKeyDown={e => handleKeyDown(e, shortcut.id)}
-                onKeyUp={e => handleKeyUp(e, shortcut.id)}
-              >
-                {editingId === shortcut.id ? '按下快捷键...' : shortcut.customKey || shortcut.defaultKey}
-              </button>
+    <div className="max-h-[70vh] overflow-y-auto">
+      <div className="space-y-6">
+        <p className="text-sm text-gray-500">
+          点击快捷键按钮进行编辑。按下新的按键组合来设置快捷键，按 ESC 取消编辑。
+        </p>
+        <div className="space-y-4">
+          {Object.values(shortcuts).map(shortcut => (
+            <div key={shortcut.id} className="flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">{shortcut.name}</div>
+                  <div className="text-sm text-gray-500">{shortcut.description}</div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    className={`px-4 py-2 border rounded-md transition-colors duration-150 ${
+                      editingId === shortcut.id
+                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                        : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => startRecording(shortcut.id)}
+                    onKeyDown={e => handleKeyDown(e, shortcut.id)}
+                    onKeyUp={e => handleKeyUp(e, shortcut.id)}
+                  >
+                    {editingId === shortcut.id ? (
+                      <span className="text-blue-600">按下快捷键...</span>
+                    ) : (
+                      <span className="font-mono">{shortcut.customKey || shortcut.defaultKey}</span>
+                    )}
+                  </button>
+                  {shortcut.customKey && (
+                    <button
+                      className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
+                      onClick={() => resetShortcut(shortcut.id)}
+                    >
+                      重置
+                    </button>
+                  )}
+                </div>
+              </div>
               {shortcut.customKey && (
-                <button
-                  className="text-sm text-gray-500 hover:text-gray-700"
-                  onClick={() => resetShortcut(shortcut.id)}
-                >
-                  重置
-                </button>
+                <div className="text-xs text-gray-400">
+                  默认快捷键：<span className="font-mono">{shortcut.defaultKey}</span>
+                </div>
               )}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -120,6 +120,7 @@ function App() {
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
   const [promptPresets, setPromptPresets] = useLocalStorage<Preset[]>('promptPresets', []);
   const [isWebDAVOpen, setIsWebDAVOpen] = useState(false);
+  const [isShortcutSettingsOpen, setIsShortcutSettingsOpen] = useState(false);
 
   // 模拟加载效果
   useEffect(() => {
@@ -511,6 +512,12 @@ function App() {
             >
               数据管理
             </button>
+            <button
+              onClick={() => setIsShortcutSettingsOpen(true)}
+              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+            >
+              快捷键设置
+            </button>
             {currentUser?.role === 'admin' && (
               <button
                 onClick={() => setIsUserManagementOpen(true)}
@@ -527,9 +534,14 @@ function App() {
             </button>
           </div>
 
-          <div className="border-t">
+          {/* 添加快捷键设置弹窗 */}
+          <Modal
+            isOpen={isShortcutSettingsOpen}
+            onClose={() => setIsShortcutSettingsOpen(false)}
+            title="快捷键设置"
+          >
             <ShortcutSettings />
-          </div>
+          </Modal>
         </div>
       </aside>
 
