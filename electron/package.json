@@ -41,6 +41,20 @@
       "shortcutName": "TrackFlow",
       "uninstallDisplayName": "TrackFlow",
       "artifactName": "TrackFlow Setup ${version}.${ext}"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "../icon_512.png",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["AppImage", "deb", "rpm"],
+      "icon": "../icon_512.png",
+      "category": "Utility"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
     }
   },
   "author": "",
