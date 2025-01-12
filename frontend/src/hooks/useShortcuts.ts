@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Shortcut, ShortcutMap } from '../types/shortcuts';
+import { ShortcutMap } from '../types/shortcuts';
 
 const DEFAULT_SHORTCUTS: ShortcutMap = {
   newRecord: {
@@ -138,4 +138,4 @@ export const useShortcuts = () => {
     resetShortcut,
     getActiveKey,
   };
-}; 
+};

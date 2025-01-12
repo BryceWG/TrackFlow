@@ -23,7 +23,7 @@ export const ShortcutSettings: React.FC = () => {
     }
   };
 
-  const handleKeyUp = (e: React.KeyboardEvent, id: string) => {
+  const handleKeyUp = (id: string) => {
     if (!recording) return;
 
     const shortcutStr = tempKeys
@@ -72,7 +72,7 @@ export const ShortcutSettings: React.FC = () => {
                     }`}
                     onClick={() => startRecording(shortcut.id)}
                     onKeyDown={e => handleKeyDown(e, shortcut.id)}
-                    onKeyUp={e => handleKeyUp(e, shortcut.id)}
+      onKeyUp={() => handleKeyUp(shortcut.id)}
                   >
                     {editingId === shortcut.id ? (
                       <span className="text-blue-600">按下快捷键...</span>
@@ -101,4 +101,4 @@ export const ShortcutSettings: React.FC = () => {
       </div>
     </div>
   );
-}; 
+};
