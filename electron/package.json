@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "TrackFlow Desktop App",
   "main": "dist/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/TrackFlow.git"
+  },
   "scripts": {
     "start": "cross-env NODE_ENV=development electron .",
     "build": "tsc",

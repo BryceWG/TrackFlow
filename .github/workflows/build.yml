@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -35,9 +37,19 @@ jobs:
           cd frontend
           npm run build
 
+      - name: Debug Info
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Git status:"
+          git status
+          echo "Repository info:"
+          git remote -v
+
       - name: Build/Release Electron app
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: electron-builder
         run: |
           cd electron
           npm run build
