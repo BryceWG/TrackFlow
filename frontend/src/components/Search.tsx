@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon, XMarkIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface Project {
   id: string;
@@ -28,7 +28,8 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
   const [keyword, setKeyword] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   // 监听 Ctrl/Command + F 和 ESC 快捷键
   useEffect(() => {
@@ -43,17 +44,13 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
       // 按 ESC 键关闭搜索面板
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (showDatePicker) {
-          setShowDatePicker(false);
-        } else {
-          onClose();
-        }
+        onClose();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, showDatePicker]);
+  }, [onClose]);
 
   // 处理搜索
   const handleSearch = () => {
@@ -95,13 +92,32 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
         setDateRange({ start: null, end: null });
         break;
     }
-    setShowDatePicker(false);
   };
 
+  // 处理自定义日期范围
+  const handleCustomDateRange = () => {
+    if (customStartDate && customEndDate) {
+      const start = new Date(customStartDate);
+      const end = new Date(customEndDate);
+      end.setHours(23, 59, 59, 999); // 设置结束时间为当天最后一秒
+      setDateRange({
+        start: start.toISOString(),
+        end: end.toISOString(),
+      });
+    }
+  };
+
+  // 当自定义日期改变时更新日期范围
+  useEffect(() => {
+    if (customStartDate && customEndDate) {
+      handleCustomDateRange();
+    }
+  }, [customStartDate, customEndDate]);
+
   return (
-    <div className="space-y-4 max-h-[80vh] overflow-y-auto p-4">
+    <div className="flex flex-col h-[80vh] p-4">
       {/* 搜索框 */}
-      <div className="relative">
+      <div className="relative mb-4">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
         </div>
@@ -126,115 +142,141 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
 
       {/* 搜索结果计数 */}
       {keyword && (
-        <div className="text-sm text-gray-500 flex items-center justify-between">
+        <div className="text-sm text-gray-500 flex items-center justify-between mb-4">
           <span>找到 {resultCount} 条相关记录</span>
           <span className="text-blue-600">搜索结果已在主页面显示</span>
         </div>
       )}
 
-      {/* 筛选条件 */}
-      <div className="flex flex-wrap gap-2">
-        {/* 项目筛选 */}
-        <div className="flex flex-wrap gap-2 mb-2">
-          <button
-            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-              !selectedProjectId
-                ? 'bg-blue-100 text-blue-800'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-            onClick={() => setSelectedProjectId(null)}
-          >
-            全部项目
-          </button>
-          {projects.map((project) => {
-            let colorObj;
-            try {
-              colorObj = JSON.parse(project.color);
-            } catch {
-              colorObj = {
-                bg: 'bg-blue-100',
-                text: 'text-blue-800',
-                hover: 'hover:bg-blue-200'
-              };
-            }
-            return (
-              <button
-                key={project.id}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center space-x-1
-                  ${selectedProjectId === project.id
-                    ? colorObj.bg + ' ' + colorObj.text
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      <div className="flex gap-4 h-full">
+        {/* 左侧：项目筛选 */}
+        <div className="w-1/2 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">按项目筛选</h3>
+          <div className="space-y-2">
+            <button
+              className={`w-full px-3 py-2 rounded-md text-sm font-medium text-left ${
+                !selectedProjectId
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setSelectedProjectId(null)}
+            >
+              全部项目
+            </button>
+            {projects.map((project) => {
+              let colorObj;
+              try {
+                colorObj = JSON.parse(project.color);
+              } catch {
+                colorObj = {
+                  bg: 'bg-blue-50',
+                  text: 'text-blue-700',
+                };
+              }
+              return (
+                <button
+                  key={project.id}
+                  className={`w-full px-3 py-2 rounded-md text-sm font-medium text-left flex items-center ${
+                    selectedProjectId === project.id
+                      ? colorObj.bg + ' ' + colorObj.text
+                      : 'text-gray-700 hover:bg-gray-50'
                   }`}
-                onClick={() => setSelectedProjectId(project.id)}
-              >
-                <span>{project.emoji}</span>
-                <span>{project.name}</span>
-              </button>
-            );
-          })}
+                  onClick={() => setSelectedProjectId(project.id)}
+                >
+                  <span className="mr-2">{project.emoji}</span>
+                  <span>{project.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* 时间范围筛选 */}
-        <div className="relative inline-block">
-          <button
-            className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center space-x-1
-              ${dateRange.start ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
-            `}
-            onClick={() => setShowDatePicker(!showDatePicker)}
-          >
-            <CalendarIcon className="h-4 w-4" />
-            <span>
-              {dateRange.start
-                ? new Date(dateRange.start).toLocaleDateString()
-                : '时间范围'}
-            </span>
-          </button>
-
-          {/* 时间选择下拉菜单 */}
-          {showDatePicker && (
-            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50 min-w-[120px]">
-              <button
-                className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
-                onClick={() => handleDateRangeSelect('today')}
-              >
-                今天
-              </button>
-              <button
-                className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
-                onClick={() => handleDateRangeSelect('yesterday')}
-              >
-                昨天
-              </button>
-              <button
-                className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
-                onClick={() => handleDateRangeSelect('week')}
-              >
-                最近7天
-              </button>
-              <button
-                className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
-                onClick={() => handleDateRangeSelect('month')}
-              >
-                最近30天
-              </button>
-              <button
-                className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
-                onClick={() => handleDateRangeSelect('all')}
-              >
-                全部时间
-              </button>
+        {/* 右侧：时间范围 */}
+        <div className="w-1/2 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">按时间筛选</h3>
+          
+          {/* 自定义日期范围 */}
+          <div className="mb-4 space-y-2">
+            <h4 className="text-sm text-gray-600">自定义日期范围</h4>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                className="flex-1 px-2 py-1 border border-gray-300 rounded-md text-sm"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+              />
+              <span className="text-gray-500">至</span>
+              <input
+                type="date"
+                className="flex-1 px-2 py-1 border border-gray-300 rounded-md text-sm"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+              />
             </div>
-          )}
+          </div>
+
+          {/* 快捷时间选项 */}
+          <div className="space-y-2">
+            <h4 className="text-sm text-gray-600">快捷选项</h4>
+            <button
+              className={`w-full px-3 py-2 rounded-md text-sm font-medium text-left ${
+                !dateRange.start ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => {
+                setDateRange({ start: null, end: null });
+                setCustomStartDate('');
+                setCustomEndDate('');
+              }}
+            >
+              全部时间
+            </button>
+            <button
+              className={`w-full px-3 py-2 rounded-md text-sm font-medium text-left ${
+                dateRange.start && new Date(dateRange.start).toDateString() === new Date().toDateString()
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => {
+                handleDateRangeSelect('today');
+                setCustomStartDate('');
+                setCustomEndDate('');
+              }}
+            >
+              今天
+            </button>
+            <button
+              className={`w-full px-3 py-2 rounded-md text-sm font-medium text-left ${
+                dateRange.start && new Date(dateRange.start).toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => handleDateRangeSelect('yesterday')}
+            >
+              昨天
+            </button>
+            <button
+              className={`w-full px-3 py-2 rounded-md text-sm font-medium text-left ${
+                dateRange.start && new Date(dateRange.start).getTime() === new Date(new Date().setDate(new Date().getDate() - 7)).getTime()
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => handleDateRangeSelect('week')}
+            >
+              最近7天
+            </button>
+            <button
+              className={`w-full px-3 py-2 rounded-md text-sm font-medium text-left ${
+                dateRange.start && new Date(dateRange.start).getTime() === new Date(new Date().setMonth(new Date().getMonth() - 1)).getTime()
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => handleDateRangeSelect('month')}
+            >
+              最近30天
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* 点击空白处关闭日期选择器 */}
-      {showDatePicker && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowDatePicker(false)}
-        />
-      )}
     </div>
   );
 }; 
