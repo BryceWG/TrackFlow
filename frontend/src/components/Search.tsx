@@ -99,7 +99,7 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-h-[80vh] overflow-y-auto p-4">
       {/* 搜索框 */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -126,15 +126,16 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
 
       {/* 搜索结果计数 */}
       {keyword && (
-        <div className="text-sm text-gray-500">
-          找到 {resultCount} 条相关记录
+        <div className="text-sm text-gray-500 flex items-center justify-between">
+          <span>找到 {resultCount} 条相关记录</span>
+          <span className="text-blue-600">搜索结果已在主页面显示</span>
         </div>
       )}
 
       {/* 筛选条件 */}
       <div className="flex flex-wrap gap-2">
         {/* 项目筛选 */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-2">
           <button
             className={`px-3 py-1.5 rounded-full text-sm font-medium ${
               !selectedProjectId
@@ -174,7 +175,7 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
         </div>
 
         {/* 时间范围筛选 */}
-        <div className="relative">
+        <div className="relative inline-block">
           <button
             className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center space-x-1
               ${dateRange.start ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
@@ -191,7 +192,7 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
 
           {/* 时间选择下拉菜单 */}
           {showDatePicker && (
-            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-10">
+            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50 min-w-[120px]">
               <button
                 className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
                 onClick={() => handleDateRangeSelect('today')}
@@ -226,6 +227,14 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
           )}
         </div>
       </div>
+
+      {/* 点击空白处关闭日期选择器 */}
+      {showDatePicker && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowDatePicker(false)}
+        />
+      )}
     </div>
   );
 }; 

@@ -4,7 +4,7 @@ import {
   TrashIcon, 
   PencilIcon,
   Bars3Icon,
-  XMarkIcon as MenuCloseIcon,
+  XMarkIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
 import { Modal } from './components/Modal'
@@ -415,7 +415,7 @@ function App() {
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? (
-          <MenuCloseIcon className="h-6 w-6" />
+          <XMarkIcon className="h-6 w-6" />
         ) : (
           <Bars3Icon className="h-6 w-6" />
         )}
@@ -591,10 +591,36 @@ function App() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
             <div className="w-full sm:w-auto pl-12 lg:pl-0">
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2 sm:mb-0">
-                {selectedProjectId ? `${getProjectName(selectedProjectId)}的时间轴` : '所有记录'}
+                {searchParams.keyword ? (
+                  <div className="flex items-center gap-2">
+                    <span>搜索结果</span>
+                    <button
+                      onClick={() => {
+                        setSearchParams({
+                          keyword: '',
+                          projectId: null,
+                          dateRange: { start: null, end: null },
+                        });
+                      }}
+                      className="text-sm font-normal text-gray-500 hover:text-gray-700 flex items-center"
+                    >
+                      <XMarkIcon className="h-5 w-5 mr-1" />
+                      清除搜索
+                    </button>
+                  </div>
+                ) : selectedProjectId ? (
+                  `${getProjectName(selectedProjectId)}的时间轴`
+                ) : (
+                  '所有记录'
+                )}
               </h1>
+              {searchParams.keyword && (
+                <div className="text-sm text-gray-500 mt-1">
+                  {`"${searchParams.keyword}" 的搜索结果（${filteredEntries.length} 条）`}
+                </div>
+              )}
               <div className="flex items-center gap-4">
-                <FilterBar onDateRangeChange={setDateRange} />
+                {!searchParams.keyword && <FilterBar onDateRangeChange={setDateRange} />}
                 <button
                   onClick={() => setIsAIAnalysisOpen(true)}
                   className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
@@ -629,6 +655,16 @@ function App() {
 
           {/* 时间轴 */}
           <div className="space-y-4 sm:space-y-6">
+            {filteredEntries.length === 0 && searchParams.keyword && (
+              <div className="text-center text-gray-500 py-6 sm:py-8">
+                未找到包含 "{searchParams.keyword}" 的记录
+              </div>
+            )}
+            {filteredEntries.length === 0 && !searchParams.keyword && (
+              <div className="text-center text-gray-500 py-6 sm:py-8">
+                {selectedProjectId ? '该项目暂无记录' : '暂无记录'}，点击右上角按钮创建
+              </div>
+            )}
             {filteredEntries.map(entry => {
               const project = projects.find(p => p.id === entry.projectId);
               let colorObj;
@@ -702,11 +738,6 @@ function App() {
                 </div>
               );
             })}
-            {filteredEntries.length === 0 && (
-              <div className="text-center text-gray-500 py-6 sm:py-8">
-                {selectedProjectId ? '该项目暂无记录' : '暂无记录'}，点击右上角按钮创建
-              </div>
-            )}
           </div>
         </div>
       </main>
