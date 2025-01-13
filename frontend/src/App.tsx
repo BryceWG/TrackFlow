@@ -4,7 +4,8 @@ import {
   TrashIcon, 
   PencilIcon,
   Bars3Icon,
-  XMarkIcon as MenuCloseIcon
+  XMarkIcon as MenuCloseIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
 import { Modal } from './components/Modal'
 import { ProjectForm } from './components/ProjectForm'
@@ -22,6 +23,7 @@ import { UserManagement } from './components/UserManagement'
 import { useAuth } from './hooks/useAuth'
 import { WebDAVManager } from './components/WebDAVManager'
 import { ShortcutSettings } from './components/ShortcutSettings'
+import { Search } from './components/Search'
 
 interface Project {
   id: string;
@@ -121,6 +123,16 @@ function App() {
   const [promptPresets, setPromptPresets] = useLocalStorage<Preset[]>('promptPresets', []);
   const [isWebDAVOpen, setIsWebDAVOpen] = useState(false);
   const [isShortcutSettingsOpen, setIsShortcutSettingsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchParams, setSearchParams] = useState<{
+    keyword: string;
+    projectId: string | null;
+    dateRange: DateRange;
+  }>({
+    keyword: '',
+    projectId: null,
+    dateRange: { start: null, end: null },
+  });
 
   // 模拟加载效果
   useEffect(() => {
@@ -139,6 +151,11 @@ function App() {
         if (projects.length > 0) {
           handleOpenEntryModal();
         }
+      }
+      // 检查是否按下 Ctrl+F 或 Command+F
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setIsSearchOpen(true);
       }
     };
 
@@ -290,14 +307,29 @@ function App() {
         return false;
       }
       
-      if (selectedProjectId && entry.projectId !== selectedProjectId) {
+      // 搜索关键词过滤
+      if (searchParams.keyword) {
+        const keyword = searchParams.keyword.toLowerCase();
+        const titleMatch = entry.title.toLowerCase().includes(keyword);
+        const contentMatch = entry.content.toLowerCase().includes(keyword);
+        if (!titleMatch && !contentMatch) {
+          return false;
+        }
+      }
+
+      // 项目过滤
+      if (searchParams.projectId && entry.projectId !== searchParams.projectId) {
+        return false;
+      } else if (selectedProjectId && entry.projectId !== selectedProjectId) {
         return false;
       }
       
-      if (dateRange.start && dateRange.end) {
+      // 时间范围过滤
+      const activeRange = searchParams.dateRange.start ? searchParams.dateRange : dateRange;
+      if (activeRange.start && activeRange.end) {
         const entryDate = new Date(entry.timestamp);
-        const start = new Date(dateRange.start);
-        const end = new Date(dateRange.end);
+        const start = new Date(activeRange.start);
+        const end = new Date(activeRange.end);
         if (entryDate < start || entryDate > end) {
           return false;
         }
@@ -568,6 +600,14 @@ function App() {
                   className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
                 >
                   <span className="mr-1">AI 分析</span>
+                </button>
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
+                  title="快捷键：Ctrl/Command + F"
+                >
+                  <MagnifyingGlassIcon className="h-5 w-5 mr-1" />
+                  搜索
                 </button>
               </div>
             </div>
@@ -854,6 +894,26 @@ function App() {
               },
             });
           }}
+        />
+      </Modal>
+
+      {/* 搜索弹窗 */}
+      <Modal
+        isOpen={isSearchOpen}
+        onClose={() => {
+          setIsSearchOpen(false);
+          setSearchParams({
+            keyword: '',
+            projectId: null,
+            dateRange: { start: null, end: null },
+          });
+        }}
+        title="搜索"
+      >
+        <Search
+          projects={projects}
+          onSearch={setSearchParams}
+          onClose={() => setIsSearchOpen(false)}
         />
       </Modal>
     </div>
