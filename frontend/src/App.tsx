@@ -5,12 +5,13 @@ import {
   PencilIcon,
   Bars3Icon,
   XMarkIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 import { Modal } from './components/Modal'
 import { ProjectForm } from './components/ProjectForm'
 import { EntryForm } from './components/EntryForm'
-import { FilterBar } from './components/FilterBar'
 import { LoadingSpinner } from './components/LoadingSpinner'
 import { Toast, ToastType } from './components/Toast'
 import { ConfirmDialog } from './components/ConfirmDialog'
@@ -133,6 +134,7 @@ function App() {
     projectId: null,
     dateRange: { start: null, end: null },
   });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // 模拟加载效果
   useEffect(() => {
@@ -394,6 +396,12 @@ function App() {
     });
   };
 
+  // 处理日期范围更新
+  const handleDateRangeChange = (newDateRange: DateRange) => {
+    setDateRange(newDateRange);
+    setIsFilterOpen(false);
+  };
+
   if (!isAuthenticated) {
     return <Login onLogin={login} error={authError} />;
   }
@@ -642,19 +650,29 @@ function App() {
                 </div>
               )}
               <div className="flex items-center gap-4 mt-4">
-                {!searchParams.keyword && <FilterBar onDateRangeChange={setDateRange} />}
+                {!searchParams.keyword && (
+                  <button
+                    onClick={() => setIsFilterOpen(true)}
+                    className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-150"
+                  >
+                    <FunnelIcon className="h-4 w-4 mr-1" />
+                    筛选
+                  </button>
+                )}
                 <button
                   onClick={() => setIsAIAnalysisOpen(true)}
-                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
+                  className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-150"
+                  title="快捷键：Ctrl/Command + A"
                 >
-                  <span className="mr-1">AI 分析</span>
+                  <SparklesIcon className="h-4 w-4 mr-1" />
+                  AI 分析
                 </button>
                 <button
                   onClick={() => setIsSearchOpen(true)}
-                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
+                  className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-150"
                   title="快捷键：Ctrl/Command + F"
                 >
-                  <MagnifyingGlassIcon className="h-5 w-5 mr-1" />
+                  <MagnifyingGlassIcon className="h-4 w-4 mr-1" />
                   搜索
                 </button>
               </div>
@@ -949,6 +967,131 @@ function App() {
           }}
         />
       </Modal>
+
+      {/* 添加筛选面板 */}
+      {isFilterOpen && (
+        <div 
+          className="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
+          onClick={() => setIsFilterOpen(false)}
+        >
+          <div 
+            className="fixed inset-x-0 top-0 bg-white shadow-lg z-50"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="max-w-7xl mx-auto p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">时间范围筛选</h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => handleDateRangeChange({ start: null, end: null })}
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      !dateRange.start ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    全部时间
+                  </button>
+                  <button
+                    onClick={() => {
+                      const now = new Date();
+                      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                      handleDateRangeChange({
+                        start: today.toISOString(),
+                        end: now.toISOString()
+                      });
+                    }}
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      dateRange.start && new Date(dateRange.start).toDateString() === new Date().toDateString()
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    今天
+                  </button>
+                  <button
+                    onClick={() => {
+                      const now = new Date();
+                      const start = new Date(now);
+                      start.setDate(start.getDate() - 7);
+                      handleDateRangeChange({
+                        start: start.toISOString(),
+                        end: now.toISOString()
+                      });
+                    }}
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      dateRange.start && new Date(dateRange.start).getTime() === new Date(new Date().setDate(new Date().getDate() - 7)).getTime()
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    最近7天
+                  </button>
+                  <button
+                    onClick={() => {
+                      const now = new Date();
+                      const start = new Date(now);
+                      start.setMonth(start.getMonth() - 1);
+                      handleDateRangeChange({
+                        start: start.toISOString(),
+                        end: now.toISOString()
+                      });
+                    }}
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      dateRange.start && new Date(dateRange.start).getTime() === new Date(new Date().setMonth(new Date().getMonth() - 1)).getTime()
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    最近30天
+                  </button>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <input
+                    type="date"
+                    className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    value={dateRange.start ? new Date(dateRange.start).toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const start = new Date(e.target.value);
+                        const end = dateRange.end ? new Date(dateRange.end) : new Date();
+                        handleDateRangeChange({
+                          start: start.toISOString(),
+                          end: end.toISOString()
+                        });
+                      }
+                    }}
+                  />
+                  <span className="text-gray-500">至</span>
+                  <input
+                    type="date"
+                    className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    value={dateRange.end ? new Date(dateRange.end).toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const end = new Date(e.target.value);
+                        end.setHours(23, 59, 59, 999);
+                        const start = dateRange.start ? new Date(dateRange.start) : new Date(end);
+                        start.setHours(0, 0, 0, 0);
+                        handleDateRangeChange({
+                          start: start.toISOString(),
+                          end: end.toISOString()
+                        });
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
