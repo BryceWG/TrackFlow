@@ -28,6 +28,7 @@ import { WebDAVManager } from './components/WebDAVManager'
 import { ShortcutSettings } from './components/ShortcutSettings'
 import { Search } from './components/Search'
 import { BlinkoConfig } from './components/BlinkoConfig'
+import { IntegrationSettings } from './components/IntegrationSettings'
 
 interface Project {
   id: string;
@@ -148,7 +149,7 @@ function App() {
     domain: '',
     token: ''
   });
-  const [isBlinkoConfigOpen, setIsBlinkoConfigOpen] = useState(false);
+  const [isIntegrationSettingsOpen, setIsIntegrationSettingsOpen] = useState(false);
 
   // 模拟加载效果
   useEffect(() => {
@@ -609,10 +610,10 @@ function App() {
                 快捷键设置
               </button>
               <button
-                onClick={() => setIsBlinkoConfigOpen(true)}
+                onClick={() => setIsIntegrationSettingsOpen(true)}
                 className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
               >
-                Blinko 设置
+                联动设置
               </button>
               {currentUser?.role === 'admin' && (
                 <button
@@ -1174,20 +1175,20 @@ function App() {
         </div>
       )}
 
-      {/* Blinko 配置弹窗 */}
+      {/* 联动设置弹窗 */}
       <Modal
-        isOpen={isBlinkoConfigOpen}
-        onClose={() => setIsBlinkoConfigOpen(false)}
-        title="Blinko 设置"
+        isOpen={isIntegrationSettingsOpen}
+        onClose={() => setIsIntegrationSettingsOpen(false)}
+        title="联动设置"
       >
-        <BlinkoConfig
-          config={blinkoConfig}
-          onSave={(newConfig) => {
+        <IntegrationSettings
+          blinkoConfig={blinkoConfig}
+          onSaveBlinkoConfig={(newConfig) => {
             setBlinkoConfig(newConfig);
-            setIsBlinkoConfigOpen(false);
+            setIsIntegrationSettingsOpen(false);
             showToast('success', 'Blinko 配置已保存');
           }}
-          onClose={() => setIsBlinkoConfigOpen(false)}
+          onClose={() => setIsIntegrationSettingsOpen(false)}
         />
       </Modal>
     </div>
