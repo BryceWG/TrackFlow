@@ -7,7 +7,8 @@ import {
   XMarkIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  SparklesIcon
+  SparklesIcon,
+  ChevronUpIcon
 } from '@heroicons/react/24/outline'
 import { Modal } from './components/Modal'
 import { ProjectForm } from './components/ProjectForm'
@@ -135,6 +136,7 @@ function App() {
     dateRange: { start: null, end: null },
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false);
 
   // 模拟加载效果
   useEffect(() => {
@@ -533,45 +535,56 @@ function App() {
           </nav>
 
           {/* AI 和用户管理按钮 */}
-          <div className="p-4 border-t space-y-2">
-            <button
-              onClick={() => setIsAIConfigOpen(true)}
-              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
-            >
-              AI 设置
-            </button>
-            <button
-              onClick={() => setIsPromptPresetsOpen(true)}
-              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
-            >
-              提示词预设
-            </button>
-            <button
-              onClick={() => setIsWebDAVOpen(true)}
-              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
-            >
-              数据管理
-            </button>
-            <button
-              onClick={() => setIsShortcutSettingsOpen(true)}
-              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
-            >
-              快捷键设置
-            </button>
-            {currentUser?.role === 'admin' && (
+          <div className="p-4 border-t">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-600">设置</span>
               <button
-                onClick={() => setIsUserManagementOpen(true)}
+                onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)}
+                className="p-1 hover:bg-gray-100 rounded-md"
+              >
+                <ChevronUpIcon className={`w-4 h-4 text-gray-500 transform transition-transform duration-200 ${isSettingsCollapsed ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+            <div className={`space-y-2 transition-all duration-200 ${isSettingsCollapsed ? 'h-0 overflow-hidden opacity-0' : 'h-auto opacity-100'}`}>
+              <button
+                onClick={() => setIsAIConfigOpen(true)}
                 className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
               >
-                用户管理
+                AI 设置
               </button>
-            )}
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 bg-gray-50 rounded-md hover:bg-gray-100"
-            >
-              退出登录
-            </button>
+              <button
+                onClick={() => setIsPromptPresetsOpen(true)}
+                className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+              >
+                提示词预设
+              </button>
+              <button
+                onClick={() => setIsWebDAVOpen(true)}
+                className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+              >
+                数据管理
+              </button>
+              <button
+                onClick={() => setIsShortcutSettingsOpen(true)}
+                className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+              >
+                快捷键设置
+              </button>
+              {currentUser?.role === 'admin' && (
+                <button
+                  onClick={() => setIsUserManagementOpen(true)}
+                  className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+                >
+                  用户管理
+                </button>
+              )}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 bg-gray-50 rounded-md hover:bg-gray-100"
+              >
+                退出登录
+              </button>
+            </div>
           </div>
 
           {/* 添加快捷键设置弹窗 */}
@@ -620,30 +633,44 @@ function App() {
         <div className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
             <div className="w-full sm:w-auto pl-12 lg:pl-0">
-              <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2 sm:mb-0">
-                {searchParams.keyword ? (
-                  <div className="flex items-center gap-2">
-                    <span>搜索结果</span>
-                    <button
-                      onClick={() => {
-                        setSearchParams({
-                          keyword: '',
-                          projectId: null,
-                          dateRange: { start: null, end: null },
-                        });
-                      }}
-                      className="text-sm font-normal text-gray-500 hover:text-gray-700 flex items-center"
-                    >
-                      <XMarkIcon className="h-5 w-5 mr-1" />
-                      清除搜索
-                    </button>
-                  </div>
-                ) : selectedProjectId ? (
-                  `${getProjectName(selectedProjectId)}的时间轴`
-                ) : (
-                  '所有记录'
-                )}
-              </h1>
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-0">
+                  {searchParams.keyword ? (
+                    <div className="flex items-center gap-2">
+                      <span>搜索结果</span>
+                      <button
+                        onClick={() => {
+                          setSearchParams({
+                            keyword: '',
+                            projectId: null,
+                            dateRange: { start: null, end: null },
+                          });
+                        }}
+                        className="text-sm font-normal text-gray-500 hover:text-gray-700 flex items-center"
+                      >
+                        <XMarkIcon className="h-5 w-5 mr-1" />
+                        清除搜索
+                      </button>
+                    </div>
+                  ) : selectedProjectId ? (
+                    `${getProjectName(selectedProjectId)}的时间轴`
+                  ) : (
+                    '所有记录'
+                  )}
+                </h1>
+                <button 
+                  className="sm:hidden flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    handleOpenEntryModal();
+                    handleCloseMobileMenu();
+                  }}
+                  disabled={projects.length === 0}
+                  title={projects.length === 0 ? "请先创建项目" : "快捷键：Ctrl/Command + N"}
+                >
+                  <PlusIcon className="w-5 h-5 mr-2" />
+                  新建记录
+                </button>
+              </div>
               {searchParams.keyword && (
                 <div className="text-sm text-gray-500 mt-1 mb-4">
                   {`"${searchParams.keyword}" 的搜索结果（${filteredEntries.length} 条）`}
@@ -677,20 +704,18 @@ function App() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button 
-                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => {
-                  handleOpenEntryModal();
-                  handleCloseMobileMenu();
-                }}
-                disabled={projects.length === 0}
-                title={projects.length === 0 ? "请先创建项目" : "快捷键：Ctrl/Command + N"}
-              >
-                <PlusIcon className="w-5 h-5 mr-2" />
-                新建记录
-        </button>
-            </div>
+            <button 
+              className="hidden sm:flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => {
+                handleOpenEntryModal();
+                handleCloseMobileMenu();
+              }}
+              disabled={projects.length === 0}
+              title={projects.length === 0 ? "请先创建项目" : "快捷键：Ctrl/Command + N"}
+            >
+              <PlusIcon className="w-5 h-5 mr-2" />
+              新建记录
+            </button>
           </div>
 
           {/* 时间轴 */}
