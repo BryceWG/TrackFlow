@@ -589,8 +589,14 @@ function App() {
       <main className="flex-1 overflow-auto w-full">
         {/* 搜索面板 */}
         {isSearchOpen && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 z-40">
-            <div className="fixed inset-x-0 top-0 bg-white shadow-lg z-50">
+          <div 
+            className="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
+            onClick={() => setIsSearchOpen(false)}
+          >
+            <div 
+              className="fixed inset-x-0 top-0 bg-white shadow-lg z-50"
+              onClick={e => e.stopPropagation()}
+            >
               <div className="max-w-7xl mx-auto">
                 <Search
                   projects={projects}
@@ -631,11 +637,11 @@ function App() {
                 )}
               </h1>
               {searchParams.keyword && (
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="text-sm text-gray-500 mt-1 mb-4">
                   {`"${searchParams.keyword}" 的搜索结果（${filteredEntries.length} 条）`}
                 </div>
               )}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 mt-4">
                 {!searchParams.keyword && <FilterBar onDateRangeChange={setDateRange} />}
                 <button
                   onClick={() => setIsAIAnalysisOpen(true)}
@@ -943,35 +949,6 @@ function App() {
           }}
         />
       </Modal>
-
-      {/* 搜索状态指示器 */}
-      {searchParams.keyword && !isSearchOpen && (
-        <div className="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-2 z-50 flex items-center gap-2">
-          <span className="text-sm text-gray-600">
-            {`"${searchParams.keyword}" (${filteredEntries.length})`}
-          </span>
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="text-gray-400 hover:text-gray-600"
-            title="修改搜索"
-          >
-            <PencilIcon className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => {
-              setSearchParams({
-                keyword: '',
-                projectId: null,
-                dateRange: { start: null, end: null },
-              });
-            }}
-            className="text-gray-400 hover:text-gray-600"
-            title="清除搜索"
-          >
-            <XMarkIcon className="h-4 w-4" />
-          </button>
-        </div>
-      )}
     </div>
   )
 }

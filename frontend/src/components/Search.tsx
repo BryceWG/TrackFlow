@@ -115,7 +115,7 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
   }, [customStartDate, customEndDate]);
 
   return (
-    <div className="flex flex-col h-[80vh] p-4">
+    <div className="flex flex-col h-[60vh] p-4">
       {/* 搜索框 */}
       <div className="relative mb-4">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -142,9 +142,8 @@ export const Search: React.FC<SearchProps> = ({ projects, onSearch, onClose, res
 
       {/* 搜索结果计数 */}
       {keyword && (
-        <div className="text-sm text-gray-500 flex items-center justify-between mb-4">
-          <span>找到 {resultCount} 条相关记录</span>
-          <span className="text-blue-600">搜索结果已在主页面显示</span>
+        <div className="text-sm text-gray-500 mb-4">
+          找到 {resultCount} 条相关记录
         </div>
       )}
 
