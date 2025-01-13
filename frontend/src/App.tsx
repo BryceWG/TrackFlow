@@ -8,7 +8,8 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   SparklesIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  ArrowUpOnSquareIcon
 } from '@heroicons/react/24/outline'
 import { Modal } from './components/Modal'
 import { ProjectForm } from './components/ProjectForm'
@@ -26,6 +27,7 @@ import { useAuth } from './hooks/useAuth'
 import { WebDAVManager } from './components/WebDAVManager'
 import { ShortcutSettings } from './components/ShortcutSettings'
 import { Search } from './components/Search'
+import { BlinkoConfig } from './components/BlinkoConfig'
 
 interface Project {
   id: string;
@@ -61,6 +63,11 @@ interface AIConfigData {
   model: string;
   temperature: number;
   systemPrompt: string;
+}
+
+interface BlinkoConfig {
+  domain: string;
+  token: string;
 }
 
 // 默认颜色对象
@@ -137,6 +144,11 @@ function App() {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false);
+  const [blinkoConfig, setBlinkoConfig] = useLocalStorage<BlinkoConfig>('blinkoConfig', {
+    domain: '',
+    token: ''
+  });
+  const [isBlinkoConfigOpen, setIsBlinkoConfigOpen] = useState(false);
 
   // 模拟加载效果
   useEffect(() => {
@@ -404,6 +416,32 @@ function App() {
     setIsFilterOpen(false);
   };
 
+  // 添加同步到 Blinko 的功能
+  const syncToBlinko = async (entry: Entry) => {
+    try {
+      const content = `# ${entry.title}\n${entry.content}`;
+      const response = await fetch(`${blinkoConfig.domain}/api/v1/note/upsert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${blinkoConfig.token}`
+        },
+        body: JSON.stringify({
+          content,
+          type: 0
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('同步失败');
+      }
+
+      showToast('success', '已同步到 Blinko');
+    } catch (error) {
+      showToast('error', '同步到 Blinko 失败');
+    }
+  };
+
   if (!isAuthenticated) {
     return <Login onLogin={login} error={authError} />;
   }
@@ -569,6 +607,12 @@ function App() {
                 className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
               >
                 快捷键设置
+              </button>
+              <button
+                onClick={() => setIsBlinkoConfigOpen(true)}
+                className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 rounded-md hover:bg-gray-100"
+              >
+                Blinko 设置
               </button>
               {currentUser?.role === 'admin' && (
                 <button
@@ -795,6 +839,18 @@ function App() {
                           >
                             <TrashIcon className="w-4 h-4" />
                           </button>
+                          {blinkoConfig.token && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                syncToBlinko(entry);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded text-blue-600"
+                              title="同步到 Blinko"
+                            >
+                              <ArrowUpOnSquareIcon className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1117,6 +1173,23 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Blinko 配置弹窗 */}
+      <Modal
+        isOpen={isBlinkoConfigOpen}
+        onClose={() => setIsBlinkoConfigOpen(false)}
+        title="Blinko 设置"
+      >
+        <BlinkoConfig
+          config={blinkoConfig}
+          onSave={(newConfig) => {
+            setBlinkoConfig(newConfig);
+            setIsBlinkoConfigOpen(false);
+            showToast('success', 'Blinko 配置已保存');
+          }}
+          onClose={() => setIsBlinkoConfigOpen(false)}
+        />
+      </Modal>
     </div>
   )
 }

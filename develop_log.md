@@ -250,3 +250,10 @@
 3. 优化打包体积
 
 4. Blinko联动
+   - 支持Blinko联动,可以将记录同步到Blinko
+   - 增加一个联动设置,放在侧边栏下方.第一个项目就是Blinko,在blinko设置页可以填入自己的blinko domain和token
+   - 只有当填入Blinko的token后,才在记录上增加一个保存当前记录内容到blinko的按钮,点击后,将记录保存到Blinko
+   - 记录的保存形式为:
+   # 记录标题
+   内容
+   - AI分析的结果可以保存到Blinko
