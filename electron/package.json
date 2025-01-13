@@ -36,9 +36,7 @@
       }
     ],
     "win": {
-      "target": [
-        "nsis"
-      ],
+      "target": ["nsis"],
       "icon": "../icon_512.png"
     },
     "nsis": {
@@ -48,7 +46,7 @@
       "createStartMenuShortcut": true,
       "shortcutName": "TrackFlow",
       "uninstallDisplayName": "TrackFlow",
-      "artifactName": "TrackFlow Setup ${version}.${ext}"
+      "artifactName": "TrackFlow-Setup-${version}-win.${ext}"
     },
     "mac": {
       "target": ["dmg"],
@@ -57,12 +55,14 @@
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "artifactName": "TrackFlow-${version}-mac.${ext}"
     },
     "linux": {
       "target": ["AppImage", "deb", "rpm"],
       "icon": "../icon_512.png",
-      "category": "Utility"
+      "category": "Utility",
+      "artifactName": "TrackFlow-${version}-linux.${ext}"
     },
     "publish": {
       "provider": "github",
