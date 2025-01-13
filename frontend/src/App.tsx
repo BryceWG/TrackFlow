@@ -80,6 +80,13 @@ const DEFAULT_COLOR = {
   border: 'border-blue-200'
 };
 
+// 添加时区转换函数
+const toLocalISOString = (date: Date) => {
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
+  return localDate.toISOString();
+};
+
 function App() {
   const {
     users,
@@ -198,7 +205,7 @@ function App() {
 
   const handleCreateProject = (projectData: { name: string; description: string; color: string; emoji: string }) => {
     try {
-      const now = new Date().toISOString();
+      const now = toLocalISOString(new Date());
       const newProject = {
         id: Date.now().toString(),
         order: projects.length,
@@ -217,7 +224,7 @@ function App() {
 
   const handleCreateEntry = (entryData: { title: string; content: string; projectId: string; timestamp: string }) => {
     try {
-      const now = new Date().toISOString();
+      const now = toLocalISOString(new Date());
       const newEntry = {
         id: Date.now().toString(),
         ...entryData,
@@ -241,7 +248,7 @@ function App() {
   const handleUpdateEntry = (entryData: { title: string; content: string; projectId: string; timestamp: string }) => {
     try {
       if (!editingEntry) return;
-      const now = new Date().toISOString();
+      const now = toLocalISOString(new Date());
       const updatedEntries = entries.map(entry => 
         entry.id === editingEntry.id 
           ? { ...entry, ...entryData, updatedAt: now }

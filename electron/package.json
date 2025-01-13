@@ -1,6 +1,6 @@
 {
   "name": "trackflow",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "TrackFlow Desktop App",
   "main": "dist/main.js",
   "repository": {

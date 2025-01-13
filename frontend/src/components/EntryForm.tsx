@@ -6,6 +6,13 @@ interface Project {
   description: string;
 }
 
+// 添加时区转换函数
+const toLocalISOString = (date: Date) => {
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
+  return localDate.toISOString().slice(0, 16); // 只保留到分钟
+};
+
 interface EntryFormProps {
   projects: Project[];
   onSubmit: (entry: { title: string; content: string; projectId: string; timestamp: string }) => void;
@@ -19,28 +26,36 @@ interface EntryFormProps {
   mode?: 'create' | 'edit';
 }
 
-export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'create' }: EntryFormProps) {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [projectId, setProjectId] = useState('');
-  const [timestamp, setTimestamp] = useState('');
+export const EntryForm: React.FC<EntryFormProps> = ({
+  projects,
+  onSubmit,
+  onCancel,
+  mode = 'create',
+  initialData,
+}) => {
+  const [formData, setFormData] = useState({
+    title: initialData?.title || '',
+    content: initialData?.content || '',
+    projectId: initialData?.projectId || '',
+    timestamp: initialData?.timestamp || toLocalISOString(new Date()),
+  });
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (mode === 'edit' && initialData) {
-      setTitle(initialData.title);
-      setContent(initialData.content);
-      setProjectId(initialData.projectId);
-      if (initialData.timestamp) {
-        // 将 ISO 字符串转换为本地时间
-        const date = new Date(initialData.timestamp);
-        setTimestamp(date.toISOString().slice(0, 16)); // 格式: "YYYY-MM-DDTHH:mm"
-      }
+      setFormData({
+        title: initialData.title,
+        content: initialData.content,
+        projectId: initialData.projectId,
+        timestamp: initialData.timestamp || toLocalISOString(new Date()),
+      });
     } else if (initialData?.projectId) {
-      setProjectId(initialData.projectId);
-      // 设置默认时间为当前时间
-      const now = new Date();
-      setTimestamp(now.toISOString().slice(0, 16));
+      setFormData({
+        title: '',
+        content: '',
+        projectId: initialData.projectId,
+        timestamp: toLocalISOString(new Date()),
+      });
     }
   }, [mode, initialData]);
 
@@ -49,33 +64,35 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
     setError('');
 
     // 检查是否至少填写了标题或内容之一
-    if (!title.trim() && !content.trim()) {
+    if (!formData.title.trim() && !formData.content.trim()) {
       setError('请至少填写标题或内容其中之一');
       return;
     }
 
-    if (!projectId) {
+    if (!formData.projectId) {
       setError('请选择所属项目');
       return;
     }
 
-    if (!timestamp) {
+    if (!formData.timestamp) {
       setError('请选择记录时间');
       return;
     }
 
     onSubmit({ 
-      title: title.trim(), 
-      content: content.trim(), 
-      projectId,
-      timestamp: new Date(timestamp).toISOString()
+      title: formData.title.trim(), 
+      content: formData.content.trim(), 
+      projectId: formData.projectId,
+      timestamp: formData.timestamp
     });
 
     if (mode === 'create') {
-      setTitle('');
-      setContent('');
-      setProjectId('');
-      setTimestamp('');
+      setFormData({
+        title: '',
+        content: '',
+        projectId: '',
+        timestamp: '',
+      });
     }
   };
 
@@ -88,8 +105,8 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
         <input
           type="text"
           id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           placeholder="请输入记录标题"
         />
@@ -101,8 +118,8 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
         </label>
         <select
           id="project"
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
+          value={formData.projectId}
+          onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
         >
@@ -122,8 +139,8 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
         <input
           type="datetime-local"
           id="timestamp"
-          value={timestamp}
-          onChange={(e) => setTimestamp(e.target.value)}
+          value={formData.timestamp}
+          onChange={(e) => setFormData({ ...formData, timestamp: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
         />
@@ -135,8 +152,8 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
         </label>
         <textarea
           id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+          value={formData.content}
+          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
           rows={4}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           placeholder="请输入记录内容"
@@ -170,4 +187,4 @@ export function EntryForm({ projects, onSubmit, onCancel, initialData, mode = 'c
       </div>
     </form>
   );
-} 
+}; 
