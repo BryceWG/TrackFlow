@@ -427,7 +427,9 @@ function App() {
   // 添加同步到 Blinko 的功能
   const syncToBlinko = async (entry: Entry) => {
     try {
-      const content = `# ${entry.title}\n${entry.content}`;
+      const project = projects.find(p => p.id === entry.projectId);
+      const content = `# ${entry.title}\n${entry.content}\n\n#${project?.name || '未分类'}`;
+      
       const response = await fetch(`${blinkoConfig.domain}/api/v1/note/upsert`, {
         method: 'POST',
         headers: {
@@ -441,12 +443,17 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error('同步失败');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message || 
+          `同步失败 (HTTP ${response.status}): ${response.statusText}`
+        );
       }
 
       showToast('success', '已同步到 Blinko');
     } catch (error) {
-      showToast('error', '同步到 Blinko 失败');
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      showToast('error', `同步到 Blinko 失败: ${errorMessage}`);
     }
   };
 
