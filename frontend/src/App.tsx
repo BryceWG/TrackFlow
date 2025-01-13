@@ -908,12 +908,13 @@ function App() {
             dateRange: { start: null, end: null },
           });
         }}
-        title="搜索"
+        title={searchParams.keyword ? `搜索"${searchParams.keyword}"` : "搜索"}
       >
         <Search
           projects={projects}
           onSearch={setSearchParams}
           onClose={() => setIsSearchOpen(false)}
+          resultCount={filteredEntries.length}
         />
       </Modal>
     </div>
